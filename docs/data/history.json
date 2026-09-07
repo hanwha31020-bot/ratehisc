@@ -1091,7 +1091,7 @@
         "cp1m": "2026-09-04",
         "cp3m": "2026-09-04",
         "sofr": "2026-09-03",
-        "treasury_3y": null
+        "treasury_3y": "2026-09-04"
       },
       "status": {
         "bok_base": "ok",
@@ -1102,10 +1102,10 @@
         "cp1m": "ok",
         "cp3m": "ok",
         "sofr": "ok",
-        "treasury_3y": "no_data"
+        "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.048,
         "corp_aa_2y": 4.411,
@@ -1113,7 +1113,7 @@
         "cp1m": 3.16,
         "cp3m": 3.24,
         "sofr": 3.66,
-        "treasury_3y": null
+        "treasury_3y": 3.885
       }
     },
     "2026-09-06": {
@@ -1127,7 +1127,7 @@
         "cp1m": "2026-09-04",
         "cp3m": "2026-09-04",
         "sofr": "2026-09-03",
-        "treasury_3y": null
+        "treasury_3y": "2026-09-04"
       },
       "status": {
         "bok_base": "ok",
@@ -1138,10 +1138,10 @@
         "cp1m": "ok",
         "cp3m": "ok",
         "sofr": "ok",
-        "treasury_3y": "no_data"
+        "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.048,
         "corp_aa_2y": 4.411,
@@ -1149,7 +1149,7 @@
         "cp1m": 3.16,
         "cp3m": 3.24,
         "sofr": 3.66,
-        "treasury_3y": null
+        "treasury_3y": 3.885
       }
     },
     "2026-09-07": {
@@ -1163,7 +1163,7 @@
         "cp1m": "2026-09-04",
         "cp3m": "2026-09-04",
         "sofr": "2026-09-03",
-        "treasury_3y": null
+        "treasury_3y": "2026-09-04"
       },
       "status": {
         "bok_base": "ok",
@@ -1174,10 +1174,10 @@
         "cp1m": "ok",
         "cp3m": "ok",
         "sofr": "ok",
-        "treasury_3y": "no_data"
+        "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.048,
         "corp_aa_2y": 4.411,
@@ -1185,7 +1185,7 @@
         "cp1m": 3.16,
         "cp3m": 3.24,
         "sofr": 3.66,
-        "treasury_3y": null
+        "treasury_3y": 3.885
       }
     }
   },
