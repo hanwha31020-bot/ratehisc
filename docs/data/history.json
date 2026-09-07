@@ -786,7 +786,7 @@
         "corp_aa_1y": 4.019,
         "corp_aa_2y": 4.384,
         "corp_aa_3y": 4.498,
-        "cp1m": 3,
+        "cp1m": 3.0,
         "cp3m": 3.2,
         "sofr": 3.66,
         "treasury_3y": 3.817
@@ -817,7 +817,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.014,
         "corp_aa_2y": 4.322,
@@ -853,7 +853,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.019,
         "corp_aa_2y": 4.368,
@@ -889,7 +889,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.019,
         "corp_aa_2y": 4.368,
@@ -925,7 +925,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.019,
         "corp_aa_2y": 4.368,
@@ -961,7 +961,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.028,
         "corp_aa_2y": 4.402,
@@ -997,7 +997,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.041,
         "corp_aa_2y": 4.433,
@@ -1033,7 +1033,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.049,
         "corp_aa_2y": 4.469,
@@ -1069,7 +1069,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3,
+        "bok_base": 3.0,
         "cd91": 3.12,
         "corp_aa_1y": 4.046,
         "corp_aa_2y": 4.417,
