@@ -3,11 +3,11 @@
 
 data/history.json 구조:
 {
-  "metrics": ["bok_base","cd91","cp1m","cp3m","corp_aa_1y","corp_aa_2y","corp_aa_3y","sofr","ust2y"],
+  "metrics": ["bok_base","cd91","cp1m","cp3m","corp_aa_1y","corp_aa_2y","corp_aa_3y","treasury_3y","sofr"],
   "days": {
     "2026-09-07": {
-        "values": {"bok_base": 3.00, "cd91": 3.12, ..., "ust2y": 4.379},
-        "status":  {"bok_base": "ok", ..., "ust2y": "blocked"},
+        "values": {"bok_base": 3.00, "cd91": 3.12, ..., "sofr": 3.66},
+        "status":  {"bok_base": "ok", ..., "sofr": "ok"},
         "effective_date": {"bok_base": "2026-08-27", "cd91": "2026-09-04", ...},
         "backfilled": false
     },
@@ -34,8 +34,8 @@ METRICS = [
     "corp_aa_1y",
     "corp_aa_2y",
     "corp_aa_3y",
+    "treasury_3y",
     "sofr",
-    "ust2y",
 ]
 
 METRIC_LABELS = {
@@ -46,8 +46,8 @@ METRIC_LABELS = {
     "corp_aa_1y": "회사채(AA-,1년)",
     "corp_aa_2y": "회사채(AA-,2년)",
     "corp_aa_3y": "회사채(AA-,3년)",
+    "treasury_3y": "국고채권(3년)",
     "sofr": "SOFR",
-    "ust2y": "미국 2년 국채",
 }
 
 

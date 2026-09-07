@@ -156,7 +156,8 @@ def fetch_cp(d: date) -> Optional[CpRates]:
 
 
 # ---------------------------------------------------------------------------
-# 채권시가평가수익률 (회사채 I(공모사채) / 무보증 / AA-, 1/2/3년)
+# 채권시가평가수익률 (회사채 I(공모사채)/무보증/AA-, 1/2/3년 + 국채/국고채권, 3년)
+# 한 번의 조회로 두 카테고리 행이 모두 응답에 함께 들어오므로, 요청은 한 번만 보낸다.
 # ---------------------------------------------------------------------------
 
 BOND_BODY_TEMPLATE = """<?xml version="1.0" encoding="utf-8"?>
@@ -172,16 +173,21 @@ BOND_BODY_TEMPLATE = """<?xml version="1.0" encoding="utf-8"?>
 
 
 @dataclass
-class CorpBondRates:
-    y1: float
-    y2: float
-    y3: float
+class BondRates:
+    corp_aa_1y: float
+    corp_aa_2y: float
+    corp_aa_3y: float
+    treasury_3y: Optional[float]
 
 
-def parse_bond_response(xml_text: str) -> Optional[CorpBondRates]:
-    """largeCategoryMrk=회사채 I(공모사채), typeNmMrk=무보증, creditRnkMrk=AA- 행의
-    val4(1년), val6(2년), val8(3년)을 반환."""
+def parse_bond_response(xml_text: str) -> Optional[BondRates]:
+    """largeCategoryMrk=회사채 I(공모사채)/무보증/AA- 행의 val4(1년)/val6(2년)/val8(3년)과,
+    largeCategoryMrk=국채/국고채권/양곡,외평,재정 행의 val8(3년)을 함께 반환한다.
+    회사채(AA-) 행이 없으면(휴장일 등) 전체를 못 찾은 것으로 보고 None을 반환하되,
+    국고채권 행만 없는 경우는 treasury_3y=None으로 두고 나머지는 정상 반환한다."""
     root = ET.fromstring(xml_text)
+    corp: Optional[tuple[float, float, float]] = None
+    treasury_3y: Optional[float] = None
     for dto in root.iter("BISBndSrtPrcDayDTO"):
         row = {child.tag: (child.text or "").strip() for child in dto}
         if (
@@ -192,13 +198,27 @@ def parse_bond_response(xml_text: str) -> Optional[CorpBondRates]:
             v4, v6, v8 = row.get("val4"), row.get("val6"), row.get("val8")
             if v4 and v6 and v8:
                 try:
-                    return CorpBondRates(y1=float(v4), y2=float(v6), y3=float(v8))
+                    corp = (float(v4), float(v6), float(v8))
                 except ValueError:
-                    return None
-    return None
+                    corp = None
+        elif (
+            row.get("largeCategoryMrk") == "국채"
+            and row.get("typeNmMrk") == "국고채권"
+            and row.get("creditRnkMrk") == "양곡,외평,재정"
+        ):
+            v8 = row.get("val8")
+            if v8:
+                try:
+                    treasury_3y = float(v8)
+                except ValueError:
+                    treasury_3y = None
+
+    if corp is None:
+        return None
+    return BondRates(corp_aa_1y=corp[0], corp_aa_2y=corp[1], corp_aa_3y=corp[2], treasury_3y=treasury_3y)
 
 
-def fetch_corp_bond(d: date) -> Optional[CorpBondRates]:
+def fetch_bond_quotes(d: date) -> Optional[BondRates]:
     body = _build_common_body(BOND_BODY_TEMPLATE, d.strftime("%Y%m%d"))
     text = _post(body)
     return parse_bond_response(text)
@@ -208,4 +228,4 @@ if __name__ == "__main__":
     today = date.today()
     print("CD:", fetch_cd(today))
     print("CP:", fetch_cp(today))
-    print("Bond:", fetch_corp_bond(today))
+    print("Bond:", fetch_bond_quotes(today))

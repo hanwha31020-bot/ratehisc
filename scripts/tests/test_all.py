@@ -16,8 +16,6 @@ from date_utils import (
     find_available,
 )
 from sources.kofia import parse_cd_response, parse_cp_response, parse_bond_response
-from sources.ust2y import _extract_rows, fetch_ust2y_on_or_before
-from sources import ust2y as ust2y_mod
 from sources import bok
 from storage import upsert_day, copy_day_as_backfill
 from fetch_rates import backfill_weekend
@@ -100,34 +98,11 @@ class KofiaParsingTests(unittest.TestCase):
     def test_parse_bond(self):
         xml_text = (FIXTURE_DIR / "fixture_bond.xml").read_text(encoding="utf-8")
         result = parse_bond_response(xml_text)
-        self.assertEqual(result.y1, 4.048)
-        self.assertEqual(result.y2, 4.411)
-        self.assertEqual(result.y3, 4.558)
-
-
-class Ust2yParsingTests(unittest.TestCase):
-    def test_extract_rows(self):
-        html = (FIXTURE_DIR / "fixture_investing.html").read_text(encoding="utf-8")
-        rows = _extract_rows(html)
-        self.assertEqual(len(rows), 4)
-        self.assertEqual(rows[0].d, date(2026, 9, 4))
-
-    def test_on_or_before_with_holiday_contamination(self):
-        html = (FIXTURE_DIR / "fixture_investing.html").read_text(encoding="utf-8")
-        rows = _extract_rows(html)
-        original_fetch = ust2y_mod.fetch_historical_rows
-        original_treasury = ust2y_mod._treasury_trading_dates
-        ust2y_mod.fetch_historical_rows = lambda timeout=20: rows
-        ust2y_mod._treasury_trading_dates = lambda year, timeout=15: {
-            date(2026, 9, 1), date(2026, 9, 2), date(2026, 9, 3)
-        }
-        try:
-            # 9/4는 "가짜 휴장일" 취급 -> 9/3으로 폴백해야 한다.
-            result = fetch_ust2y_on_or_before(date(2026, 9, 4), verify_with_treasury=True)
-            self.assertAlmostEqual(result, 4.33400011062622)
-        finally:
-            ust2y_mod.fetch_historical_rows = original_fetch
-            ust2y_mod._treasury_trading_dates = original_treasury
+        self.assertEqual(result.corp_aa_1y, 4.048)
+        self.assertEqual(result.corp_aa_2y, 4.411)
+        self.assertEqual(result.corp_aa_3y, 4.558)
+        # 국채/국고채권/양곡,외평,재정 행의 3년(val8)도 같은 응답에서 함께 나와야 한다.
+        self.assertEqual(result.treasury_3y, 3.885)
 
 
 class BackfillTests(unittest.TestCase):

@@ -10,10 +10,9 @@ fetch_rates.py(매일 실행)는 "오늘자"만 채우므로, 처음 시작할 �
     python scripts/backfill.py            # 최근 22영업일(약 한 달)
     python scripts/backfill.py --days 10  # 최근 10영업일만
 
-BOK(기준금리)와 미국 2년 국채(investing.com)는 날짜별 조회 API가 아니라
-"이력 페이지 하나를 통째로 받아서 그 안에서 원하는 날짜를 찾는" 방식이므로,
-날짜마다 반복 요청하면 비효율적이고 특히 investing.com은 Cloudflare 차단
-위험이 커진다. 그래서 이 두 소스는 스크립트 시작 시 한 번만 받아서 재사용한다.
+BOK(기준금리)는 날짜별 조회 API가 아니라 "이력 페이지 하나를 통째로 받아서 그 안에서
+원하는 날짜를 찾는" 방식이므로, 날짜마다 반복 요청하지 않도록 스크립트 시작 시
+한 번만 받아서 재사용한다.
 """
 from __future__ import annotations
 
@@ -34,7 +33,7 @@ from fetch_rates import (  # noqa: E402
     gha_notice,
     gha_warning,
 )
-from sources import bok, ust2y  # noqa: E402
+from sources import bok  # noqa: E402
 from storage import load_history, save_history, upsert_day  # noqa: E402
 
 
@@ -46,23 +45,17 @@ def main() -> int:
     end = previous_business_day(date.today())  # 오늘자는 fetch_rates.py 몫이라 제외
     days = business_days_range_ending(end, args.days)
 
-    gha_notice("BOK 기준금리 이력 / 미국 2년 국채 이력을 한 번만 미리 받아둡니다.")
+    gha_notice("BOK 기준금리 이력을 한 번만 미리 받아둡니다.")
     try:
         bok_rows = bok.fetch_all_base_rates()
     except Exception as exc:  # noqa: BLE001
         gha_warning(f"BOK 기준금리 이력 조회 실패, 해당 항목은 이번 백필에서 비워둡니다: {exc}")
         bok_rows = []
 
-    try:
-        ust2y_rows = ust2y.fetch_historical_rows()
-    except Exception as exc:  # noqa: BLE001
-        gha_warning(f"미국 2년 국채 이력 조회 실패, 해당 항목은 이번 백필에서 비워둡니다: {exc}")
-        ust2y_rows = []
-
     data = load_history(HISTORY_PATH)
     for d in days:
         gha_notice(f"백필 진행: {fmt_iso(d)}")
-        values, status, effective = collect_day(d, bok_rows=bok_rows, ust2y_rows=ust2y_rows)
+        values, status, effective = collect_day(d, bok_rows=bok_rows)
         upsert_day(data, fmt_iso(d), values, status, effective, backfilled=False)
         backfill_weekend(data, d)
         failed = [m for m, s in status.items() if s != "ok"]

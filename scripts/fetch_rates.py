@@ -4,9 +4,9 @@
 
 실행 흐름:
 1. 오늘(KST) 기준 국내/해외 대상일 계산
-2. 4개 국내 소스(BOK, CD, CP, 채권) 수집 (KOFIA 3종은 공휴일 등으로 데이터가 없으면
-   자동으로 하루씩 더 앞으로 이동하며 재시도)
-3. 2개 해외 소스(SOFR, 미국2년) 수집 (각자 "대상일 이하 최신값" 방식으로 자체 처리)
+2. 국내 소스(BOK, CD, CP, 회사채(AA-)+국고채권) 수집 (KOFIA 3종은 공휴일 등으로 데이터가
+   없으면 자동으로 하루씩 더 앞으로 이동하며 재시도)
+3. 해외 소스(SOFR) 수집 ("대상일 이하 최신값" 방식으로 자체 처리)
 4. data/history.json 에 오늘자 레코드 upsert
 5. 주말(토/일) 백필: 오늘이 월요일이면 직전 토/일에 금요일자 값을 복사
 6. data/history.json 저장 + data/history.xlsx 재생성
@@ -23,7 +23,7 @@ from typing import Optional
 sys.path.insert(0, str(Path(__file__).parent))
 
 from date_utils import KST, compute_targets, fmt_iso, find_available  # noqa: E402
-from sources import bok, kofia, sofr, ust2y  # noqa: E402
+from sources import bok, kofia, sofr  # noqa: E402
 from storage import (  # noqa: E402
     load_history,
     save_history,
@@ -110,31 +110,41 @@ def fetch_domestic(domestic_target: date, bok_rows: Optional[list] = None):
         gha_warning(f"A1CP 수집 실패: {exc}")
         traceback.print_exc()
 
-    # 4) 회사채(AA-, 1/2/3년)
+    # 4) 회사채(AA-, 1/2/3년) + 국고채권(3년) - 한 번의 조회 결과에서 함께 얻는다
     try:
-        found_date, bond_val = find_available(kofia.fetch_corp_bond, domestic_target)
+        found_date, bond_val = find_available(kofia.fetch_bond_quotes, domestic_target)
         if bond_val is not None:
-            values["corp_aa_1y"] = bond_val.y1
-            values["corp_aa_2y"] = bond_val.y2
-            values["corp_aa_3y"] = bond_val.y3
+            values["corp_aa_1y"] = bond_val.corp_aa_1y
+            values["corp_aa_2y"] = bond_val.corp_aa_2y
+            values["corp_aa_3y"] = bond_val.corp_aa_3y
             status["corp_aa_1y"] = status["corp_aa_2y"] = status["corp_aa_3y"] = "ok"
             effective["corp_aa_1y"] = effective["corp_aa_2y"] = effective["corp_aa_3y"] = fmt_iso(found_date)
+
+            if bond_val.treasury_3y is not None:
+                values["treasury_3y"] = bond_val.treasury_3y
+                status["treasury_3y"] = "ok"
+                effective["treasury_3y"] = fmt_iso(found_date)
+            else:
+                values["treasury_3y"] = None
+                status["treasury_3y"] = "no_data"
+                effective["treasury_3y"] = None
+                gha_warning("국고채권(3년): 조회 결과에서 해당 행을 찾지 못했습니다")
         else:
-            values["corp_aa_1y"] = values["corp_aa_2y"] = values["corp_aa_3y"] = None
-            status["corp_aa_1y"] = status["corp_aa_2y"] = status["corp_aa_3y"] = "no_data"
-            effective["corp_aa_1y"] = effective["corp_aa_2y"] = effective["corp_aa_3y"] = None
-            gha_warning("회사채(AA-): 최근 10영업일 내 데이터를 찾지 못했습니다")
+            values["corp_aa_1y"] = values["corp_aa_2y"] = values["corp_aa_3y"] = values["treasury_3y"] = None
+            status["corp_aa_1y"] = status["corp_aa_2y"] = status["corp_aa_3y"] = status["treasury_3y"] = "no_data"
+            effective["corp_aa_1y"] = effective["corp_aa_2y"] = effective["corp_aa_3y"] = effective["treasury_3y"] = None
+            gha_warning("회사채(AA-)/국고채권: 최근 10영업일 내 데이터를 찾지 못했습니다")
     except Exception as exc:  # noqa: BLE001
-        values["corp_aa_1y"] = values["corp_aa_2y"] = values["corp_aa_3y"] = None
-        status["corp_aa_1y"] = status["corp_aa_2y"] = status["corp_aa_3y"] = "blocked"
-        effective["corp_aa_1y"] = effective["corp_aa_2y"] = effective["corp_aa_3y"] = None
-        gha_warning(f"회사채(AA-) 수집 실패: {exc}")
+        values["corp_aa_1y"] = values["corp_aa_2y"] = values["corp_aa_3y"] = values["treasury_3y"] = None
+        status["corp_aa_1y"] = status["corp_aa_2y"] = status["corp_aa_3y"] = status["treasury_3y"] = "blocked"
+        effective["corp_aa_1y"] = effective["corp_aa_2y"] = effective["corp_aa_3y"] = effective["treasury_3y"] = None
+        gha_warning(f"회사채(AA-)/국고채권 수집 실패: {exc}")
         traceback.print_exc()
 
     return values, status, effective
 
 
-def fetch_foreign(foreign_target: date, ust2y_rows: Optional[list] = None):
+def fetch_foreign(foreign_target: date):
     values: dict[str, Optional[float]] = {}
     status: dict[str, str] = {}
     effective: dict[str, Optional[str]] = {}
@@ -154,37 +164,17 @@ def fetch_foreign(foreign_target: date, ust2y_rows: Optional[list] = None):
         gha_warning(f"SOFR 수집 실패: {exc}")
         traceback.print_exc()
 
-    # 6) 미국 2년 국채 (investing.com - 차단 위험 있음. 실패시 공란+알림만)
-    try:
-        rate = ust2y.fetch_ust2y_on_or_before(foreign_target, rows=ust2y_rows)
-        values["ust2y"] = rate
-        status["ust2y"] = "ok" if rate is not None else "no_data"
-        effective["ust2y"] = fmt_iso(foreign_target) if rate is not None else None
-        if rate is None:
-            gha_warning("미국 2년 국채: 데이터를 찾지 못했습니다")
-    except ust2y.BlockedError as exc:
-        values["ust2y"] = None
-        status["ust2y"] = "blocked"
-        effective["ust2y"] = None
-        gha_warning(f"미국 2년 국채: investing.com 접속이 차단된 것으로 보입니다 ({exc}). 값은 공란 처리합니다.")
-    except Exception as exc:  # noqa: BLE001
-        values["ust2y"] = None
-        status["ust2y"] = "blocked"
-        effective["ust2y"] = None
-        gha_warning(f"미국 2년 국채 수집 실패: {exc}")
-        traceback.print_exc()
-
     return values, status, effective
 
 
-def collect_day(run_date: date, bok_rows: Optional[list] = None, ust2y_rows: Optional[list] = None):
-    """run_date 하루치 9개 금리를 수집한다 (values, status, effective_date 튜플).
-    bok_rows/ust2y_rows를 넘기면 해당 소스는 재요청하지 않고 넘겨받은 목록에서 찾는다
+def collect_day(run_date: date, bok_rows: Optional[list] = None):
+    """run_date 하루치 금리를 수집한다 (values, status, effective_date 튜플).
+    bok_rows를 넘기면 BOK는 재요청하지 않고 넘겨받은 목록에서 찾는다
     (backfill.py처럼 여러 날짜를 연달아 수집할 때 외부 사이트 요청 횟수를 줄이기 위함).
     """
     domestic_target, foreign_target = compute_targets(run_date)
     d_values, d_status, d_effective = fetch_domestic(domestic_target, bok_rows=bok_rows)
-    f_values, f_status, f_effective = fetch_foreign(foreign_target, ust2y_rows=ust2y_rows)
+    f_values, f_status, f_effective = fetch_foreign(foreign_target)
     values = {**d_values, **f_values}
     status = {**d_status, **f_status}
     effective = {**d_effective, **f_effective}
