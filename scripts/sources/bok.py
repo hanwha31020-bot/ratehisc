@@ -33,7 +33,8 @@ class BokBaseRate:
     rate: float
 
 
-def _parse_table(html: str) -> Optional[BokBaseRate]:
+def _parse_all_rows(html: str) -> list[BokBaseRate]:
+    """표에 있는 모든 (변경일자, 기준금리) 행을 최신순으로 반환한다."""
     soup = BeautifulSoup(html, "html.parser")
 
     target_table = None
@@ -50,8 +51,9 @@ def _parse_table(html: str) -> Optional[BokBaseRate]:
                 target_table = table
                 break
     if target_table is None:
-        return None
+        return []
 
+    results: list[BokBaseRate] = []
     rows = target_table.find_all("tr")
     last_year = None
     for tr in rows:
@@ -87,18 +89,48 @@ def _parse_table(html: str) -> Optional[BokBaseRate]:
         except ValueError:
             continue
 
-        # 표는 최신순으로 정렬되어 있으므로 첫 번째로 파싱에 성공한 행이 최신값이다.
-        return BokBaseRate(effective_date=eff_date, rate=rate_val)
+        # 표는 최신순으로 정렬되어 있으므로 파싱 순서 = 최신순.
+        results.append(BokBaseRate(effective_date=eff_date, rate=rate_val))
 
-    return None
+    return results
 
 
-def fetch_latest_base_rate(session: Optional[requests.Session] = None, timeout: int = 15) -> Optional[BokBaseRate]:
+def _parse_table(html: str) -> Optional[BokBaseRate]:
+    rows = _parse_all_rows(html)
+    return rows[0] if rows else None
+
+
+def base_rate_on(rows: list[BokBaseRate], target: date) -> Optional[BokBaseRate]:
+    """rows(최신순 목록) 중 target 시점에 실제로 적용 중이던 기준금리를 찾는다.
+    (= effective_date가 target 이하인 것 중 가장 최근 값. 기준금리는 금통위 발표시에만
+    바뀌므로, 과거 날짜를 백필할 때는 "오늘의 최신값"이 아니라 이 함수를 써야 한다.)
+    """
+    candidates = [r for r in rows if r.effective_date <= target]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda r: r.effective_date)
+
+
+def _get_html(session: Optional[requests.Session] = None, timeout: int = 15) -> str:
     sess = session or requests
     resp = sess.get(URL, headers=HEADERS, timeout=timeout)
     resp.raise_for_status()
     resp.encoding = resp.apparent_encoding or "utf-8"
-    return _parse_table(resp.text)
+    return resp.text
+
+
+def fetch_latest_base_rate(session: Optional[requests.Session] = None, timeout: int = 15) -> Optional[BokBaseRate]:
+    return _parse_table(_get_html(session, timeout))
+
+
+def fetch_all_base_rates(session: Optional[requests.Session] = None, timeout: int = 15) -> list[BokBaseRate]:
+    return _parse_all_rows(_get_html(session, timeout))
+
+
+def fetch_base_rate_on(
+    target: date, session: Optional[requests.Session] = None, timeout: int = 15
+) -> Optional[BokBaseRate]:
+    return base_rate_on(fetch_all_base_rates(session, timeout), target)
 
 
 if __name__ == "__main__":

@@ -161,7 +161,7 @@ let HISTORY = { metrics: Object.keys(METRIC_LABELS), days: {} };
 
 function fmtValue(v) {
   if (v === null || v === undefined || v === "") return "-";
-  return Number(v).toFixed(3).replace(/0+$/, "").replace(/\.$/, "");
+  return Number(v).toFixed(2);
 }
 
 function renderTiles(container, dayRecord) {

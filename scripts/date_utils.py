@@ -66,6 +66,17 @@ def find_available(
     return None, None
 
 
+def business_days_range_ending(end: date, count: int) -> list[date]:
+    """end(포함, 평일이어야 함)부터 과거로 평일만 count개를 모아, 오래된 날짜부터 순서대로 반환한다."""
+    days: list[date] = []
+    cur = end
+    while len(days) < count:
+        if not is_weekend(cur):
+            days.append(cur)
+        cur -= timedelta(days=1)
+    return list(reversed(days))
+
+
 def compute_targets(run_date: date) -> Tuple[date, date]:
     """실행일 기준 (국내 대상일, 해외 대상일)을 계산한다."""
     domestic_target = previous_business_day(run_date)

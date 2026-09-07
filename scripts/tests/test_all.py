@@ -9,12 +9,18 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from date_utils import compute_targets, previous_business_day, find_available
+from date_utils import (
+    business_days_range_ending,
+    compute_targets,
+    previous_business_day,
+    find_available,
+)
 from sources.kofia import parse_cd_response, parse_cp_response, parse_bond_response
 from sources.ust2y import _extract_rows, fetch_ust2y_on_or_before
 from sources import ust2y as ust2y_mod
+from sources import bok
 from storage import upsert_day, copy_day_as_backfill
-from fetch_rates import backfill_weekend
+from fetch_rates import backfill_weekend, r2
 
 FIXTURE_DIR = Path(__file__).resolve().parent.parent / "sources" / "tests"
 
@@ -43,6 +49,48 @@ class DateLogicTests(unittest.TestCase):
         found_date, val = find_available(fetch, date(2026, 9, 4))
         self.assertEqual(found_date, date(2026, 9, 3))
         self.assertEqual(val, 1.23)
+
+    def test_business_days_range_ending(self):
+        # 2026-09-04(금)부터 과거로 평일 5개 = 8/31(월)~9/4(금), 오래된 순.
+        days = business_days_range_ending(date(2026, 9, 4), 5)
+        self.assertEqual(
+            days,
+            [
+                date(2026, 8, 31),
+                date(2026, 9, 1),
+                date(2026, 9, 2),
+                date(2026, 9, 3),
+                date(2026, 9, 4),
+            ],
+        )
+
+
+class RoundingTests(unittest.TestCase):
+    def test_r2_rounds_to_two_decimals(self):
+        self.assertEqual(r2(4.048), 4.05)
+        self.assertEqual(r2(3.0), 3.0)
+        self.assertIsNone(r2(None))
+
+
+class BokParsingTests(unittest.TestCase):
+    def test_parse_all_rows_and_base_rate_on(self):
+        html = (FIXTURE_DIR / "fixture_bok.html").read_text(encoding="utf-8")
+        rows = bok._parse_all_rows(html)
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(rows[0].effective_date, date(2026, 8, 27))
+        self.assertEqual(rows[0].rate, 3.00)
+
+        # 8/27 변경 "직전" 날짜를 조회하면 그 이전 금리(7/16, 2.75)가 나와야 한다.
+        result = bok.base_rate_on(rows, date(2026, 8, 26))
+        self.assertEqual(result.rate, 2.75)
+        self.assertEqual(result.effective_date, date(2026, 7, 16))
+
+        # 변경일 당일부터는 새 금리가 적용된다.
+        result = bok.base_rate_on(rows, date(2026, 8, 27))
+        self.assertEqual(result.rate, 3.00)
+
+        # 표에 있는 가장 오래된 변경일보다 더 과거를 조회하면 None.
+        self.assertIsNone(bok.base_rate_on(rows, date(2020, 1, 1)))
 
 
 class KofiaParsingTests(unittest.TestCase):

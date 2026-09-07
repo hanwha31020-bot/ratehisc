@@ -104,12 +104,18 @@ def _treasury_trading_dates(year: int, timeout: int = 15) -> set[date]:
 
 
 def fetch_ust2y_on_or_before(
-    target: date, verify_with_treasury: bool = True
+    target: date,
+    rows: Optional[list[HistoricalRow]] = None,
+    verify_with_treasury: bool = True,
 ) -> Optional[float]:
     """target 이하 날짜 중 가장 최근의 "진짜 개장일" 종가를 반환한다.
     investing.com 접속 자체가 막히면 BlockedError를 발생시킨다 (호출부에서 공란+알림 처리).
+
+    rows를 넘기면 investing.com을 다시 조회하지 않고 그 목록을 사용한다.
+    (백필처럼 여러 날짜를 연달아 조회할 때 Cloudflare 차단 위험을 줄이기 위함)
     """
-    rows = fetch_historical_rows()
+    if rows is None:
+        rows = fetch_historical_rows()
     rows_sorted = sorted(rows, key=lambda r: r.d, reverse=True)
     candidates = [r for r in rows_sorted if r.d <= target]
     if not candidates:

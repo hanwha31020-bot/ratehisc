@@ -1,11 +1,12 @@
-name: Fetch daily rates
+name: Backfill rates (manual)
 
 on:
-  schedule:
-    # 매일 KST 오전 7시 (UTC 22:00, 전날) 월~금(KST) 실행
-    # cron 요일은 UTC 기준: 일(0)~목(4) 22:00 UTC == 월~금 07:00 KST
-    - cron: "0 22 * * 0-4"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "채워 넣을 영업일 수 (기본 22 = 약 한 달)"
+        required: false
+        default: "22"
 
 permissions:
   contents: write
@@ -15,9 +16,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  fetch:
+  backfill:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     env:
       TZ: Asia/Seoul
     steps:
@@ -32,8 +33,8 @@ jobs:
       - name: Install dependencies
         run: pip install --no-cache-dir requests beautifulsoup4 openpyxl
 
-      - name: Run fetch script
-        run: python scripts/fetch_rates.py
+      - name: Run backfill script
+        run: python scripts/backfill.py --days "${{ github.event.inputs.days }}"
 
       - name: Commit and push if changed
         run: |
@@ -43,6 +44,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "변경 사항 없음"
           else
-            git commit -m "chore: update rates ($(date +'%Y-%m-%d %H:%M %Z'))"
+            git commit -m "chore: backfill rates (${{ github.event.inputs.days }} business days)"
             git push
           fi
