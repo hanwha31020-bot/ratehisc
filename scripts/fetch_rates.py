@@ -45,11 +45,6 @@ def gha_notice(message: str) -> None:
     print(f"::notice::{message}")
 
 
-def r2(x: Optional[float]) -> Optional[float]:
-    """모든 금리는 화면/엑셀에 소수점 2자리까지만 표시하므로, 저장 시점에 반올림한다."""
-    return round(x, 2) if x is not None else None
-
-
 def fetch_domestic(domestic_target: date, bok_rows: Optional[list] = None):
     values: dict[str, Optional[float]] = {}
     status: dict[str, str] = {}
@@ -65,7 +60,7 @@ def fetch_domestic(domestic_target: date, bok_rows: Optional[list] = None):
             else bok.fetch_base_rate_on(domestic_target)
         )
         if bok_result is not None:
-            values["bok_base"] = r2(bok_result.rate)
+            values["bok_base"] = bok_result.rate
             status["bok_base"] = "ok"
             effective["bok_base"] = fmt_iso(bok_result.effective_date)
         else:
@@ -83,7 +78,7 @@ def fetch_domestic(domestic_target: date, bok_rows: Optional[list] = None):
     # 2) CD(3개월)
     try:
         found_date, cd_val = find_available(kofia.fetch_cd, domestic_target)
-        values["cd91"] = r2(cd_val)
+        values["cd91"] = cd_val
         status["cd91"] = "ok" if cd_val is not None else "no_data"
         effective["cd91"] = fmt_iso(found_date) if found_date else None
         if cd_val is None:
@@ -99,8 +94,8 @@ def fetch_domestic(domestic_target: date, bok_rows: Optional[list] = None):
     try:
         found_date, cp_val = find_available(kofia.fetch_cp, domestic_target)
         if cp_val is not None:
-            values["cp1m"] = r2(cp_val.one_month)
-            values["cp3m"] = r2(cp_val.three_month)
+            values["cp1m"] = cp_val.one_month
+            values["cp3m"] = cp_val.three_month
             status["cp1m"] = status["cp3m"] = "ok"
             effective["cp1m"] = effective["cp3m"] = fmt_iso(found_date)
         else:
@@ -119,9 +114,9 @@ def fetch_domestic(domestic_target: date, bok_rows: Optional[list] = None):
     try:
         found_date, bond_val = find_available(kofia.fetch_corp_bond, domestic_target)
         if bond_val is not None:
-            values["corp_aa_1y"] = r2(bond_val.y1)
-            values["corp_aa_2y"] = r2(bond_val.y2)
-            values["corp_aa_3y"] = r2(bond_val.y3)
+            values["corp_aa_1y"] = bond_val.y1
+            values["corp_aa_2y"] = bond_val.y2
+            values["corp_aa_3y"] = bond_val.y3
             status["corp_aa_1y"] = status["corp_aa_2y"] = status["corp_aa_3y"] = "ok"
             effective["corp_aa_1y"] = effective["corp_aa_2y"] = effective["corp_aa_3y"] = fmt_iso(found_date)
         else:
@@ -147,7 +142,7 @@ def fetch_foreign(foreign_target: date, ust2y_rows: Optional[list] = None):
     # 5) SOFR
     try:
         rate = sofr.fetch_sofr_on_or_before(foreign_target)
-        values["sofr"] = r2(rate)
+        values["sofr"] = rate
         status["sofr"] = "ok" if rate is not None else "no_data"
         effective["sofr"] = fmt_iso(foreign_target) if rate is not None else None
         if rate is None:
@@ -162,7 +157,7 @@ def fetch_foreign(foreign_target: date, ust2y_rows: Optional[list] = None):
     # 6) 미국 2년 국채 (investing.com - 차단 위험 있음. 실패시 공란+알림만)
     try:
         rate = ust2y.fetch_ust2y_on_or_before(foreign_target, rows=ust2y_rows)
-        values["ust2y"] = r2(rate)
+        values["ust2y"] = rate
         status["ust2y"] = "ok" if rate is not None else "no_data"
         effective["ust2y"] = fmt_iso(foreign_target) if rate is not None else None
         if rate is None:

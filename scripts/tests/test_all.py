@@ -20,7 +20,7 @@ from sources.ust2y import _extract_rows, fetch_ust2y_on_or_before
 from sources import ust2y as ust2y_mod
 from sources import bok
 from storage import upsert_day, copy_day_as_backfill
-from fetch_rates import backfill_weekend, r2
+from fetch_rates import backfill_weekend
 
 FIXTURE_DIR = Path(__file__).resolve().parent.parent / "sources" / "tests"
 
@@ -63,13 +63,6 @@ class DateLogicTests(unittest.TestCase):
                 date(2026, 9, 4),
             ],
         )
-
-
-class RoundingTests(unittest.TestCase):
-    def test_r2_rounds_to_two_decimals(self):
-        self.assertEqual(r2(4.048), 4.05)
-        self.assertEqual(r2(3.0), 3.0)
-        self.assertIsNone(r2(None))
 
 
 class BokParsingTests(unittest.TestCase):

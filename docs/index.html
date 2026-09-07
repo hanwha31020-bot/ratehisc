@@ -50,9 +50,16 @@
     background: #fafbfc;
   }
   .rate-tile .label { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+  .value-row { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; }
   .rate-tile .value { font-size: 20px; font-weight: 700; }
+  .delta { font-size: 11px; font-weight: 700; }
+  .delta.up { color: var(--bad); }
+  .delta.down { color: var(--accent); }
+  .raw-value { font-size: 10px; color: var(--text-muted); border-top: 1px dashed var(--border); margin-top: 4px; padding-top: 3px; }
   .rate-tile .eff { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
   .rate-tile.status-blocked .value, .rate-tile.status-no_data .value { color: var(--bad); font-size: 15px; }
+  td .value-row { font-size: 13px; }
+  td .raw-value { margin-top: 2px; padding-top: 2px; }
   .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
   label { font-size: 13px; color: var(--text-muted); }
   input, select {
@@ -164,7 +171,40 @@ function fmtValue(v) {
   return Number(v).toFixed(2);
 }
 
-function renderTiles(container, dayRecord) {
+// 반올림해서 보여준 값과 실제 원본값이 다르면(=원본이 소수점 셋째자리 이하를 갖고 있으면)
+// 작은 글씨로 원본값을 따로 보여주기 위한 서브텍스트.
+function rawValueHtml(v) {
+  if (v === null || v === undefined || v === "") return "";
+  if (Math.abs(Number(v) - Number(fmtValue(v))) < 1e-9) return "";
+  return `<div class="raw-value">원본 ${v}</div>`;
+}
+
+// dateStr 기준으로, HISTORY.days에서 그 이전에 값이 있는 가장 최근 날짜의 값을 찾는다
+// (주말/공휴일 등으로 사이가 비어 있어도 건너뛰고 찾는다).
+function findPrevValue(dateStr, metric) {
+  const dates = Object.keys(HISTORY.days).sort();
+  const idx = dates.indexOf(dateStr);
+  for (let i = idx - 1; i >= 0; i--) {
+    const v = HISTORY.days[dates[i]].values ? HISTORY.days[dates[i]].values[metric] : null;
+    if (v !== null && v !== undefined) return v;
+  }
+  return null;
+}
+
+// 전일(직전 데이터가 있는 날) 대비 변동을 "+0.02" / "-0.02" 형태로, 오르면 빨간색 내리면
+// 파란색으로 보여준다. 반올림해서 0.00이 되는 미세한 차이는 표시하지 않는다.
+function deltaHtml(dateStr, metric, val) {
+  if (!dateStr || val === null || val === undefined) return "";
+  const prev = findPrevValue(dateStr, metric);
+  if (prev === null || prev === undefined) return "";
+  const delta = val - prev;
+  if (Math.abs(delta) < 0.005) return "";
+  const cls = delta > 0 ? "up" : "down";
+  const sign = delta > 0 ? "+" : "-";
+  return `<span class="delta ${cls}">${sign}${Math.abs(delta).toFixed(2)}</span>`;
+}
+
+function renderTiles(container, dayRecord, dateStr) {
   container.innerHTML = "";
   if (!dayRecord) return;
   HISTORY.metrics.forEach((m) => {
@@ -176,7 +216,11 @@ function renderTiles(container, dayRecord) {
     const isBad = status !== "ok";
     tile.innerHTML = `
       <div class="label">${METRIC_LABELS[m]}</div>
-      <div class="value">${isBad ? (STATUS_LABEL[status] || "오류") : fmtValue(val) + "%"}</div>
+      <div class="value-row">
+        <span class="value">${isBad ? (STATUS_LABEL[status] || "오류") : fmtValue(val) + "%"}</span>
+        ${isBad ? "" : deltaHtml(dateStr, m, val)}
+      </div>
+      ${isBad ? "" : rawValueHtml(val)}
       <div class="eff">${eff ? "기준일 " + eff : ""}${dayRecord.backfilled ? " · 주말백필" : ""}</div>
     `;
     container.appendChild(tile);
@@ -201,7 +245,7 @@ function doLookup() {
     return;
   }
   empty.style.display = "none";
-  renderTiles(grid, record);
+  renderTiles(grid, record, dateStr);
 }
 
 function doRangeSearch() {
@@ -233,11 +277,18 @@ function doRangeSearch() {
     const val = rec.values ? rec.values[metric] : null;
     const status = rec.status ? rec.status[metric] : "no_data";
     const eff = rec.effective_date ? rec.effective_date[metric] : "";
+    const isBad = status !== "ok";
     if (val !== null && val !== undefined) values.push(val);
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${d}${rec.backfilled ? " (주말)" : ""}</td>
-      <td>${fmtValue(val)}${val !== null && val !== undefined ? "%" : ""}</td>
+      <td>
+        <div class="value-row">
+          <span>${fmtValue(val)}${val !== null && val !== undefined ? "%" : ""}</span>
+          ${isBad ? "" : deltaHtml(d, metric, val)}
+        </div>
+        ${isBad ? "" : rawValueHtml(val)}
+      </td>
       <td>${eff || "-"}</td>
       <td><span class="badge ${STATUS_CLASS[status] || "warn"}">${STATUS_LABEL[status] || status}</span></td>
     `;
@@ -273,7 +324,7 @@ async function init() {
   const last = latestDay();
   if (last) {
     document.getElementById("todayDateLabel").textContent = "(" + last.date + ")";
-    renderTiles(document.getElementById("todayGrid"), last.record);
+    renderTiles(document.getElementById("todayGrid"), last.record, last.date);
     document.getElementById("lastUpdated").textContent = "마지막 갱신일: " + last.date;
     document.getElementById("lookupDate").value = last.date;
   } else {
