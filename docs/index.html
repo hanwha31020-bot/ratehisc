@@ -270,21 +270,24 @@ function findPrevValue(dateStr, metric) {
   return null;
 }
 
-// dateStr의 val이 그 직전 데이터가 있는 날짜에 비해 (반올림 기준으로) 실제로
-// 달라졌는지 여부. 상자 배경 강조와 증감 표시 둘 다 이 기준을 함께 쓴다.
+// dateStr의 val이 그 직전 데이터가 있는 날짜에 비해 실제로 달라졌는지 여부.
+// 화면에 보이는 값 자체가 소수점 2자리로 반올림된 값이므로, 비교도 원본이 아니라
+// 반올림된 값끼리 해야 한다 (그래야 화면엔 "4.05% / 4.05%"로 똑같이 보이는데
+// 옆에 증감이 뜨는 것 같은 불일치가 없다). 상자 배경 강조와 증감 표시 둘 다
+// 이 기준을 함께 쓴다.
 function hasChanged(dateStr, metric, val) {
   if (!dateStr || val === null || val === undefined) return false;
   const prev = findPrevValue(dateStr, metric);
   if (prev === null || prev === undefined) return false;
-  return Math.abs(val - prev) >= 0.005;
+  return Math.abs(Number(fmtValue(val)) - Number(fmtValue(prev))) >= 0.005;
 }
 
 // 전일(직전 데이터가 있는 날) 대비 변동을 "+0.02" / "-0.02" 형태로, 오르면 빨간색 내리면
-// 파란색으로 보여준다.
+// 파란색으로 보여준다. 변동폭도 화면에 보이는 반올림된 값끼리의 차이로 계산한다.
 function deltaHtml(dateStr, metric, val) {
   if (!hasChanged(dateStr, metric, val)) return "";
   const prev = findPrevValue(dateStr, metric);
-  const delta = val - prev;
+  const delta = Number(fmtValue(val)) - Number(fmtValue(prev));
   const cls = delta > 0 ? "up" : "down";
   const sign = delta > 0 ? "+" : "-";
   return `<span class="delta ${cls}">${sign}${Math.abs(delta).toFixed(2)}</span>`;
