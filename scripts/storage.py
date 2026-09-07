@@ -3,7 +3,7 @@
 
 data/history.json 구조:
 {
-  "metrics": ["bok_base","cd91","cp1m","cp3m","corp_aa_1y","corp_aa_2y","corp_aa_3y","treasury_3y","sofr"],
+  "metrics": ["bok_base","cd91","cp3m","cp1m","corp_aa_1y","corp_aa_2y","corp_aa_3y","treasury_3y","sofr"],
   "days": {
     "2026-09-04": {
         "values": {"bok_base": 3.00, "cd91": 3.12, ..., "sofr": 3.66},
@@ -34,8 +34,8 @@ from typing import Any, Optional
 METRICS = [
     "bok_base",
     "cd91",
-    "cp1m",
     "cp3m",
+    "cp1m",
     "corp_aa_1y",
     "corp_aa_2y",
     "corp_aa_3y",
