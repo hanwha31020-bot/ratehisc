@@ -7,7 +7,11 @@
 2. 국내 소스(BOK, CD, CP, 회사채(AA-)+국고채권) 수집 (KOFIA 3종은 공휴일 등으로 데이터가
    없으면 자동으로 하루씩 더 앞으로 이동하며 재시도)
 3. 해외 소스(SOFR) 수집 ("대상일 이하 최신값" 방식으로 자체 처리)
-4. data/history.json 에 오늘자 레코드 upsert
+4. data/history.json 에 "국내 대상일(domestic_target)" 기준으로 레코드 upsert.
+   실행일(오늘) 자신이 아니라 실제로 조회한 데이터의 기준일을 키로 쓴다 - 이렇게 해야
+   나중에 파일을 열어봤을 때 "2026-09-04" 밑에 실제 9/4일자 값이 들어있게 된다.
+   (실행일을 키로 쓰면 "2026-09-07" 밑에 사실은 9/4일자 값이 들어있는 식으로 라벨과
+   내용이 하루 이상 어긋나는 문제가 있었다.)
 5. 주말(토/일) 백필: 오늘이 월요일이면 직전 토/일에도 오늘 수집한 값을 채움
    (토/일/월요일은 "직전 영업일" 계산이 동일하게 수렴하므로 재조회 없이 재사용 가능)
 6. data/history.json 저장 + data/history.xlsx 재생성
@@ -163,12 +167,10 @@ def fetch_foreign(foreign_target: date):
     return values, status, effective
 
 
-def collect_day(run_date: date, bok_rows: Optional[list] = None):
-    """run_date 하루치 금리를 수집한다 (values, status, effective_date 튜플).
-    bok_rows를 넘기면 BOK는 재요청하지 않고 넘겨받은 목록에서 찾는다
-    (backfill.py처럼 여러 날짜를 연달아 수집할 때 외부 사이트 요청 횟수를 줄이기 위함).
-    """
-    domestic_target, foreign_target = compute_targets(run_date)
+def collect_for_target(domestic_target: date, foreign_target: date, bok_rows: Optional[list] = None):
+    """domestic_target/foreign_target을 직접 지정해서 금리를 수집한다 (values, status,
+    effective_date 튜플). backfill.py처럼 "실행일"이라는 개념 없이 특정 기준일 하나를
+    바로 채우고 싶을 때 쓴다."""
     d_values, d_status, d_effective = fetch_domestic(domestic_target, bok_rows=bok_rows)
     f_values, f_status, f_effective = fetch_foreign(foreign_target)
     values = {**d_values, **f_values}
@@ -177,26 +179,29 @@ def collect_day(run_date: date, bok_rows: Optional[list] = None):
     return values, status, effective
 
 
+def collect_day(run_date: date, bok_rows: Optional[list] = None):
+    """run_date에 실행했다고 가정할 때의 국내/해외 대상일을 계산해서 수집한다."""
+    domestic_target, foreign_target = compute_targets(run_date)
+    return collect_for_target(domestic_target, foreign_target, bok_rows=bok_rows)
+
+
 def backfill_weekend(
     data: dict,
-    run_date: date,
+    domestic_target: date,
     values: dict[str, Optional[float]],
     status: dict[str, str],
     effective: dict[str, Optional[str]],
 ) -> None:
-    """run_date(월요일)의 직전 토/일에도 값을 채워 넣는다.
+    """domestic_target이 금요일이면, 그 다음 토/일에도 같은 값을 채워 넣는다.
 
-    previous_business_day() 계산상 토요일/일요일/월요일은 모두 같은 "직전 영업일"로
-    수렴한다 (국내: 지난 금요일 종가, 해외 SOFR: 그 전주 목요일 발표값). 즉 월요일에
-    새로 수집한 값 자체가 토/일에 대해서도 정확히 같은 값이므로, 별도로 다시 조회할
-    필요 없이 월요일 수집 결과를 그대로 재사용하면 된다.
-    (예전에는 "직전 금요일 레코드"를 그대로 복사했는데, 금요일 레코드는 그보다 한
-    영업일 더 오래된 값을 담고 있어 토/일에 부정확한 값이 들어가는 문제가 있었다.)
+    국내 대상일 계산상 토요일/일요일도 그 직전 금요일과 완전히 같은 기준일로
+    수렴한다 ("주말에는 새 시세가 없으므로 지난 금요일 값이 곧 주말 값이다").
+    그래서 별도 조회 없이 금요일 레코드를 그대로 재사용하면 된다.
     """
-    if run_date.weekday() != 0:  # 0 = Monday
+    if domestic_target.weekday() != 4:  # 4 = Friday
         return
-    saturday = run_date - timedelta(days=2)
-    sunday = run_date - timedelta(days=1)
+    saturday = domestic_target + timedelta(days=1)
+    sunday = domestic_target + timedelta(days=2)
     upsert_day(data, fmt_iso(saturday), values, status, effective, backfilled=True)
     upsert_day(data, fmt_iso(sunday), values, status, effective, backfilled=True)
 
@@ -210,8 +215,8 @@ def main() -> int:
     values, status, effective = collect_day(run_date)
 
     data = load_history(HISTORY_PATH)
-    upsert_day(data, fmt_iso(run_date), values, status, effective, backfilled=False)
-    backfill_weekend(data, run_date, values, status, effective)
+    upsert_day(data, fmt_iso(domestic_target), values, status, effective, backfilled=False)
+    backfill_weekend(data, domestic_target, values, status, effective)
     save_history(HISTORY_PATH, data)
     export_history_to_xlsx(data, XLSX_PATH)
 

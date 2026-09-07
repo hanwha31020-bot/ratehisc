@@ -2,9 +2,13 @@
 """
 과거 영업일치 금리를 한 번에 채워 넣는 백필 스크립트.
 
-fetch_rates.py(매일 실행)는 "오늘자"만 채우므로, 처음 시작할 때 과거 이력이
-비어 있으면 이 스크립트로 한 번에 채워 넣는다. 오늘자는 건드리지 않는다
-(직전 영업일까지만 채운다).
+fetch_rates.py(매일 실행)는 하루치(국내 대상일 하나)만 채우므로, 처음 시작할 때
+과거 이력이 비어 있으면 이 스크립트로 한 번에 채워 넣는다.
+
+history.json의 각 레코드는 "그 값이 실제로 유효한 기준일(국내 대상일)"을 키로 쓴다.
+그래서 이 스크립트도 "실행일"이라는 개념 없이, 채우고 싶은 기준일 목록을 직접 정해서
+각 기준일마다 collect_for_target()으로 바로 조회한다. 아직 fetch_rates.py의 오늘 실행이
+채우지 못한 가장 최근 기준일(=오늘의 전영업일)까지만 채운다.
 
 사용법 (저장소 루트에서):
     python scripts/backfill.py            # 최근 22영업일(약 한 달)
@@ -29,7 +33,7 @@ from fetch_rates import (  # noqa: E402
     HISTORY_PATH,
     XLSX_PATH,
     backfill_weekend,
-    collect_day,
+    collect_for_target,
     gha_notice,
     gha_warning,
 )
@@ -39,11 +43,11 @@ from storage import load_history, save_history, upsert_day  # noqa: E402
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="과거 영업일 금리 일괄 백필")
-    parser.add_argument("--days", type=int, default=22, help="채워 넣을 영업일 수 (기본 22 = 약 한 달)")
+    parser.add_argument("--days", type=int, default=22, help="채워 넣을 영업일(기준일) 수 (기본 22 = 약 한 달)")
     args = parser.parse_args()
 
-    end = previous_business_day(date.today())  # 오늘자는 fetch_rates.py 몫이라 제외
-    days = business_days_range_ending(end, args.days)
+    end = previous_business_day(date.today())  # 오늘 fetch_rates.py 실행이 채우는 기준일과 동일 (겹쳐도 무해함)
+    targets = business_days_range_ending(end, args.days)
 
     gha_notice("BOK 기준금리 이력을 한 번만 미리 받아둡니다.")
     try:
@@ -53,18 +57,19 @@ def main() -> int:
         bok_rows = []
 
     data = load_history(HISTORY_PATH)
-    for d in days:
-        gha_notice(f"백필 진행: {fmt_iso(d)}")
-        values, status, effective = collect_day(d, bok_rows=bok_rows)
-        upsert_day(data, fmt_iso(d), values, status, effective, backfilled=False)
-        backfill_weekend(data, d, values, status, effective)
+    for domestic_target in targets:
+        gha_notice(f"백필 진행: {fmt_iso(domestic_target)}")
+        foreign_target = previous_business_day(domestic_target)
+        values, status, effective = collect_for_target(domestic_target, foreign_target, bok_rows=bok_rows)
+        upsert_day(data, fmt_iso(domestic_target), values, status, effective, backfilled=False)
+        backfill_weekend(data, domestic_target, values, status, effective)
         failed = [m for m, s in status.items() if s != "ok"]
         if failed:
-            gha_warning(f"{fmt_iso(d)} 실패/누락 항목: {', '.join(failed)}")
+            gha_warning(f"{fmt_iso(domestic_target)} 실패/누락 항목: {', '.join(failed)}")
 
     save_history(HISTORY_PATH, data)
     export_history_to_xlsx(data, XLSX_PATH)
-    gha_notice(f"백필 완료: {fmt_iso(days[0])} ~ {fmt_iso(days[-1])} ({len(days)}영업일)")
+    gha_notice(f"백필 완료: {fmt_iso(targets[0])} ~ {fmt_iso(targets[-1])} ({len(targets)}영업일)")
     return 0
 
 
