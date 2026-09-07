@@ -57,7 +57,7 @@ def main() -> int:
         gha_notice(f"백필 진행: {fmt_iso(d)}")
         values, status, effective = collect_day(d, bok_rows=bok_rows)
         upsert_day(data, fmt_iso(d), values, status, effective, backfilled=False)
-        backfill_weekend(data, d)
+        backfill_weekend(data, d, values, status, effective)
         failed = [m for m, s in status.items() if s != "ok"]
         if failed:
             gha_warning(f"{fmt_iso(d)} 실패/누락 항목: {', '.join(failed)}")

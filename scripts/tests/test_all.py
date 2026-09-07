@@ -17,7 +17,7 @@ from date_utils import (
 )
 from sources.kofia import parse_cd_response, parse_cp_response, parse_bond_response
 from sources import bok
-from storage import upsert_day, copy_day_as_backfill
+from storage import upsert_day
 from fetch_rates import backfill_weekend
 
 FIXTURE_DIR = Path(__file__).resolve().parent.parent / "sources" / "tests"
@@ -106,19 +106,27 @@ class KofiaParsingTests(unittest.TestCase):
 
 
 class BackfillTests(unittest.TestCase):
-    def test_weekend_backfill_from_friday(self):
+    def test_weekend_backfill_reuses_mondays_own_values(self):
+        # 월요일 자신의 domestic/foreign 대상일 계산이 토/일과 완전히 같은 값으로
+        # 수렴하므로 (지난 금요일이 아니라), 월요일 수집 결과를 그대로 재사용해야 한다.
         data = {"metrics": [], "days": {}}
-        upsert_day(data, "2026-09-04", {"bok_base": 3.0}, {"bok_base": "ok"}, {"bok_base": "2026-08-27"})
-        backfill_weekend(data, date(2026, 9, 7))  # Monday
+        monday_values = {"bok_base": 3.0, "sofr": 3.70}
+        monday_status = {"bok_base": "ok", "sofr": "ok"}
+        monday_effective = {"bok_base": "2026-08-27", "sofr": "2026-09-03"}
+        upsert_day(data, "2026-09-07", monday_values, monday_status, monday_effective)
+        backfill_weekend(data, date(2026, 9, 7), monday_values, monday_status, monday_effective)
         self.assertIn("2026-09-05", data["days"])
         self.assertIn("2026-09-06", data["days"])
         self.assertTrue(data["days"]["2026-09-05"]["backfilled"])
-        self.assertEqual(data["days"]["2026-09-05"]["values"]["bok_base"], 3.0)
+        self.assertTrue(data["days"]["2026-09-06"]["backfilled"])
+        self.assertEqual(data["days"]["2026-09-05"]["values"], monday_values)
+        self.assertEqual(data["days"]["2026-09-06"]["values"], monday_values)
 
     def test_weekend_backfill_noop_on_non_monday(self):
         data = {"metrics": [], "days": {}}
-        upsert_day(data, "2026-09-08", {"bok_base": 3.0}, {"bok_base": "ok"}, {"bok_base": "2026-09-07"})
-        backfill_weekend(data, date(2026, 9, 8))  # Tuesday
+        values = {"bok_base": 3.0}
+        upsert_day(data, "2026-09-08", values, {"bok_base": "ok"}, {"bok_base": "2026-09-07"})
+        backfill_weekend(data, date(2026, 9, 8), values, {"bok_base": "ok"}, {"bok_base": "2026-09-07"})  # Tuesday
         self.assertEqual(len(data["days"]), 1)
 
 

@@ -76,14 +76,14 @@
       "backfilled": true,
       "effective_date": {
         "bok_base": "2026-07-16",
-        "cd91": "2026-08-06",
-        "corp_aa_1y": "2026-08-06",
-        "corp_aa_2y": "2026-08-06",
-        "corp_aa_3y": "2026-08-06",
-        "cp1m": "2026-08-06",
-        "cp3m": "2026-08-06",
-        "sofr": "2026-08-05",
-        "treasury_3y": "2026-08-06"
+        "cd91": "2026-08-07",
+        "corp_aa_1y": "2026-08-07",
+        "corp_aa_2y": "2026-08-07",
+        "corp_aa_3y": "2026-08-07",
+        "cp1m": "2026-08-07",
+        "cp3m": "2026-08-07",
+        "sofr": "2026-08-06",
+        "treasury_3y": "2026-08-07"
       },
       "status": {
         "bok_base": "ok",
@@ -99,27 +99,27 @@
       "values": {
         "bok_base": 2.75,
         "cd91": 2.93,
-        "corp_aa_1y": 3.946,
+        "corp_aa_1y": 3.944,
         "corp_aa_2y": 4.308,
         "corp_aa_3y": 4.441,
-        "cp1m": 2.98,
+        "cp1m": 2.99,
         "cp3m": 3.19,
-        "sofr": 3.64,
-        "treasury_3y": 3.745
+        "sofr": 3.65,
+        "treasury_3y": 3.747
       }
     },
     "2026-08-09": {
       "backfilled": true,
       "effective_date": {
         "bok_base": "2026-07-16",
-        "cd91": "2026-08-06",
-        "corp_aa_1y": "2026-08-06",
-        "corp_aa_2y": "2026-08-06",
-        "corp_aa_3y": "2026-08-06",
-        "cp1m": "2026-08-06",
-        "cp3m": "2026-08-06",
-        "sofr": "2026-08-05",
-        "treasury_3y": "2026-08-06"
+        "cd91": "2026-08-07",
+        "corp_aa_1y": "2026-08-07",
+        "corp_aa_2y": "2026-08-07",
+        "corp_aa_3y": "2026-08-07",
+        "cp1m": "2026-08-07",
+        "cp3m": "2026-08-07",
+        "sofr": "2026-08-06",
+        "treasury_3y": "2026-08-07"
       },
       "status": {
         "bok_base": "ok",
@@ -135,13 +135,13 @@
       "values": {
         "bok_base": 2.75,
         "cd91": 2.93,
-        "corp_aa_1y": 3.946,
+        "corp_aa_1y": 3.944,
         "corp_aa_2y": 4.308,
         "corp_aa_3y": 4.441,
-        "cp1m": 2.98,
+        "cp1m": 2.99,
         "cp3m": 3.19,
-        "sofr": 3.64,
-        "treasury_3y": 3.745
+        "sofr": 3.65,
+        "treasury_3y": 3.747
       }
     },
     "2026-08-10": {
@@ -328,14 +328,14 @@
       "backfilled": true,
       "effective_date": {
         "bok_base": "2026-07-16",
-        "cd91": "2026-08-13",
-        "corp_aa_1y": "2026-08-13",
-        "corp_aa_2y": "2026-08-13",
-        "corp_aa_3y": "2026-08-13",
-        "cp1m": "2026-08-13",
-        "cp3m": "2026-08-13",
-        "sofr": "2026-08-12",
-        "treasury_3y": "2026-08-13"
+        "cd91": "2026-08-14",
+        "corp_aa_1y": "2026-08-14",
+        "corp_aa_2y": "2026-08-14",
+        "corp_aa_3y": "2026-08-14",
+        "cp1m": "2026-08-14",
+        "cp3m": "2026-08-14",
+        "sofr": "2026-08-13",
+        "treasury_3y": "2026-08-14"
       },
       "status": {
         "bok_base": "ok",
@@ -351,27 +351,27 @@
       "values": {
         "bok_base": 2.75,
         "cd91": 2.93,
-        "corp_aa_1y": 3.961,
-        "corp_aa_2y": 4.348,
-        "corp_aa_3y": 4.464,
+        "corp_aa_1y": 3.949,
+        "corp_aa_2y": 4.357,
+        "corp_aa_3y": 4.477,
         "cp1m": 2.99,
         "cp3m": 3.19,
         "sofr": 3.62,
-        "treasury_3y": 3.777
+        "treasury_3y": 3.795
       }
     },
     "2026-08-16": {
       "backfilled": true,
       "effective_date": {
         "bok_base": "2026-07-16",
-        "cd91": "2026-08-13",
-        "corp_aa_1y": "2026-08-13",
-        "corp_aa_2y": "2026-08-13",
-        "corp_aa_3y": "2026-08-13",
-        "cp1m": "2026-08-13",
-        "cp3m": "2026-08-13",
-        "sofr": "2026-08-12",
-        "treasury_3y": "2026-08-13"
+        "cd91": "2026-08-14",
+        "corp_aa_1y": "2026-08-14",
+        "corp_aa_2y": "2026-08-14",
+        "corp_aa_3y": "2026-08-14",
+        "cp1m": "2026-08-14",
+        "cp3m": "2026-08-14",
+        "sofr": "2026-08-13",
+        "treasury_3y": "2026-08-14"
       },
       "status": {
         "bok_base": "ok",
@@ -387,13 +387,13 @@
       "values": {
         "bok_base": 2.75,
         "cd91": 2.93,
-        "corp_aa_1y": 3.961,
-        "corp_aa_2y": 4.348,
-        "corp_aa_3y": 4.464,
+        "corp_aa_1y": 3.949,
+        "corp_aa_2y": 4.357,
+        "corp_aa_3y": 4.477,
         "cp1m": 2.99,
         "cp3m": 3.19,
         "sofr": 3.62,
-        "treasury_3y": 3.777
+        "treasury_3y": 3.795
       }
     },
     "2026-08-17": {
@@ -580,14 +580,14 @@
       "backfilled": true,
       "effective_date": {
         "bok_base": "2026-07-16",
-        "cd91": "2026-08-20",
-        "corp_aa_1y": "2026-08-20",
-        "corp_aa_2y": "2026-08-20",
-        "corp_aa_3y": "2026-08-20",
-        "cp1m": "2026-08-20",
-        "cp3m": "2026-08-20",
-        "sofr": "2026-08-19",
-        "treasury_3y": "2026-08-20"
+        "cd91": "2026-08-21",
+        "corp_aa_1y": "2026-08-21",
+        "corp_aa_2y": "2026-08-21",
+        "corp_aa_3y": "2026-08-21",
+        "cp1m": "2026-08-21",
+        "cp3m": "2026-08-21",
+        "sofr": "2026-08-20",
+        "treasury_3y": "2026-08-21"
       },
       "status": {
         "bok_base": "ok",
@@ -602,28 +602,28 @@
       },
       "values": {
         "bok_base": 2.75,
-        "cd91": 2.93,
-        "corp_aa_1y": 3.984,
-        "corp_aa_2y": 4.391,
-        "corp_aa_3y": 4.503,
+        "cd91": 2.94,
+        "corp_aa_1y": 4.004,
+        "corp_aa_2y": 4.414,
+        "corp_aa_3y": 4.535,
         "cp1m": 2.99,
         "cp3m": 3.19,
-        "sofr": 3.62,
-        "treasury_3y": 3.822
+        "sofr": 3.63,
+        "treasury_3y": 3.855
       }
     },
     "2026-08-23": {
       "backfilled": true,
       "effective_date": {
         "bok_base": "2026-07-16",
-        "cd91": "2026-08-20",
-        "corp_aa_1y": "2026-08-20",
-        "corp_aa_2y": "2026-08-20",
-        "corp_aa_3y": "2026-08-20",
-        "cp1m": "2026-08-20",
-        "cp3m": "2026-08-20",
-        "sofr": "2026-08-19",
-        "treasury_3y": "2026-08-20"
+        "cd91": "2026-08-21",
+        "corp_aa_1y": "2026-08-21",
+        "corp_aa_2y": "2026-08-21",
+        "corp_aa_3y": "2026-08-21",
+        "cp1m": "2026-08-21",
+        "cp3m": "2026-08-21",
+        "sofr": "2026-08-20",
+        "treasury_3y": "2026-08-21"
       },
       "status": {
         "bok_base": "ok",
@@ -638,14 +638,14 @@
       },
       "values": {
         "bok_base": 2.75,
-        "cd91": 2.93,
-        "corp_aa_1y": 3.984,
-        "corp_aa_2y": 4.391,
-        "corp_aa_3y": 4.503,
+        "cd91": 2.94,
+        "corp_aa_1y": 4.004,
+        "corp_aa_2y": 4.414,
+        "corp_aa_3y": 4.535,
         "cp1m": 2.99,
         "cp3m": 3.19,
-        "sofr": 3.62,
-        "treasury_3y": 3.822
+        "sofr": 3.63,
+        "treasury_3y": 3.855
       }
     },
     "2026-08-24": {
@@ -786,7 +786,7 @@
         "corp_aa_1y": 4.019,
         "corp_aa_2y": 4.384,
         "corp_aa_3y": 4.498,
-        "cp1m": 3.0,
+        "cp1m": 3,
         "cp3m": 3.2,
         "sofr": 3.66,
         "treasury_3y": 3.817
@@ -817,7 +817,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3.0,
+        "bok_base": 3,
         "cd91": 3.12,
         "corp_aa_1y": 4.014,
         "corp_aa_2y": 4.322,
@@ -832,14 +832,14 @@
       "backfilled": true,
       "effective_date": {
         "bok_base": "2026-08-27",
-        "cd91": "2026-08-27",
-        "corp_aa_1y": "2026-08-27",
-        "corp_aa_2y": "2026-08-27",
-        "corp_aa_3y": "2026-08-27",
-        "cp1m": "2026-08-27",
-        "cp3m": "2026-08-27",
-        "sofr": "2026-08-26",
-        "treasury_3y": "2026-08-27"
+        "cd91": "2026-08-28",
+        "corp_aa_1y": "2026-08-28",
+        "corp_aa_2y": "2026-08-28",
+        "corp_aa_3y": "2026-08-28",
+        "cp1m": "2026-08-28",
+        "cp3m": "2026-08-28",
+        "sofr": "2026-08-27",
+        "treasury_3y": "2026-08-28"
       },
       "status": {
         "bok_base": "ok",
@@ -853,29 +853,29 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3.0,
+        "bok_base": 3,
         "cd91": 3.12,
-        "corp_aa_1y": 4.014,
-        "corp_aa_2y": 4.322,
-        "corp_aa_3y": 4.433,
-        "cp1m": 3.12,
+        "corp_aa_1y": 4.019,
+        "corp_aa_2y": 4.368,
+        "corp_aa_3y": 4.476,
+        "cp1m": 3.13,
         "cp3m": 3.23,
         "sofr": 3.64,
-        "treasury_3y": 3.75
+        "treasury_3y": 3.795
       }
     },
     "2026-08-30": {
       "backfilled": true,
       "effective_date": {
         "bok_base": "2026-08-27",
-        "cd91": "2026-08-27",
-        "corp_aa_1y": "2026-08-27",
-        "corp_aa_2y": "2026-08-27",
-        "corp_aa_3y": "2026-08-27",
-        "cp1m": "2026-08-27",
-        "cp3m": "2026-08-27",
-        "sofr": "2026-08-26",
-        "treasury_3y": "2026-08-27"
+        "cd91": "2026-08-28",
+        "corp_aa_1y": "2026-08-28",
+        "corp_aa_2y": "2026-08-28",
+        "corp_aa_3y": "2026-08-28",
+        "cp1m": "2026-08-28",
+        "cp3m": "2026-08-28",
+        "sofr": "2026-08-27",
+        "treasury_3y": "2026-08-28"
       },
       "status": {
         "bok_base": "ok",
@@ -889,15 +889,15 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3.0,
+        "bok_base": 3,
         "cd91": 3.12,
-        "corp_aa_1y": 4.014,
-        "corp_aa_2y": 4.322,
-        "corp_aa_3y": 4.433,
-        "cp1m": 3.12,
+        "corp_aa_1y": 4.019,
+        "corp_aa_2y": 4.368,
+        "corp_aa_3y": 4.476,
+        "cp1m": 3.13,
         "cp3m": 3.23,
         "sofr": 3.64,
-        "treasury_3y": 3.75
+        "treasury_3y": 3.795
       }
     },
     "2026-08-31": {
@@ -925,7 +925,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3.0,
+        "bok_base": 3,
         "cd91": 3.12,
         "corp_aa_1y": 4.019,
         "corp_aa_2y": 4.368,
@@ -961,7 +961,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3.0,
+        "bok_base": 3,
         "cd91": 3.12,
         "corp_aa_1y": 4.028,
         "corp_aa_2y": 4.402,
@@ -997,7 +997,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3.0,
+        "bok_base": 3,
         "cd91": 3.12,
         "corp_aa_1y": 4.041,
         "corp_aa_2y": 4.433,
@@ -1033,7 +1033,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3.0,
+        "bok_base": 3,
         "cd91": 3.12,
         "corp_aa_1y": 4.049,
         "corp_aa_2y": 4.469,
@@ -1069,7 +1069,7 @@
         "treasury_3y": "ok"
       },
       "values": {
-        "bok_base": 3.0,
+        "bok_base": 3,
         "cd91": 3.12,
         "corp_aa_1y": 4.046,
         "corp_aa_2y": 4.417,
@@ -1078,6 +1078,78 @@
         "cp3m": 3.24,
         "sofr": 3.65,
         "treasury_3y": 3.882
+      }
+    },
+    "2026-09-05": {
+      "backfilled": true,
+      "effective_date": {
+        "bok_base": "2026-08-27",
+        "cd91": "2026-09-04",
+        "corp_aa_1y": "2026-09-04",
+        "corp_aa_2y": "2026-09-04",
+        "corp_aa_3y": "2026-09-04",
+        "cp1m": "2026-09-04",
+        "cp3m": "2026-09-04",
+        "sofr": "2026-09-03",
+        "treasury_3y": null
+      },
+      "status": {
+        "bok_base": "ok",
+        "cd91": "ok",
+        "corp_aa_1y": "ok",
+        "corp_aa_2y": "ok",
+        "corp_aa_3y": "ok",
+        "cp1m": "ok",
+        "cp3m": "ok",
+        "sofr": "ok",
+        "treasury_3y": "no_data"
+      },
+      "values": {
+        "bok_base": 3,
+        "cd91": 3.12,
+        "corp_aa_1y": 4.048,
+        "corp_aa_2y": 4.411,
+        "corp_aa_3y": 4.558,
+        "cp1m": 3.16,
+        "cp3m": 3.24,
+        "sofr": 3.66,
+        "treasury_3y": null
+      }
+    },
+    "2026-09-06": {
+      "backfilled": true,
+      "effective_date": {
+        "bok_base": "2026-08-27",
+        "cd91": "2026-09-04",
+        "corp_aa_1y": "2026-09-04",
+        "corp_aa_2y": "2026-09-04",
+        "corp_aa_3y": "2026-09-04",
+        "cp1m": "2026-09-04",
+        "cp3m": "2026-09-04",
+        "sofr": "2026-09-03",
+        "treasury_3y": null
+      },
+      "status": {
+        "bok_base": "ok",
+        "cd91": "ok",
+        "corp_aa_1y": "ok",
+        "corp_aa_2y": "ok",
+        "corp_aa_3y": "ok",
+        "cp1m": "ok",
+        "cp3m": "ok",
+        "sofr": "ok",
+        "treasury_3y": "no_data"
+      },
+      "values": {
+        "bok_base": 3,
+        "cd91": 3.12,
+        "corp_aa_1y": 4.048,
+        "corp_aa_2y": 4.411,
+        "corp_aa_3y": 4.558,
+        "cp1m": 3.16,
+        "cp3m": 3.24,
+        "sofr": 3.66,
+        "treasury_3y": null
       }
     },
     "2026-09-07": {

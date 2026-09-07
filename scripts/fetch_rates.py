@@ -8,7 +8,8 @@
    없으면 자동으로 하루씩 더 앞으로 이동하며 재시도)
 3. 해외 소스(SOFR) 수집 ("대상일 이하 최신값" 방식으로 자체 처리)
 4. data/history.json 에 오늘자 레코드 upsert
-5. 주말(토/일) 백필: 오늘이 월요일이면 직전 토/일에 금요일자 값을 복사
+5. 주말(토/일) 백필: 오늘이 월요일이면 직전 토/일에도 오늘 수집한 값을 채움
+   (토/일/월요일은 "직전 영업일" 계산이 동일하게 수렴하므로 재조회 없이 재사용 가능)
 6. data/history.json 저장 + data/history.xlsx 재생성
 7. 실패한 항목이 있으면 GitHub Actions 경고 어노테이션 출력
 """
@@ -24,12 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from date_utils import KST, compute_targets, fmt_iso, find_available  # noqa: E402
 from sources import bok, kofia, sofr  # noqa: E402
-from storage import (  # noqa: E402
-    load_history,
-    save_history,
-    upsert_day,
-    copy_day_as_backfill,
-)
+from storage import load_history, save_history, upsert_day  # noqa: E402
 from export_xlsx import export_history_to_xlsx  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -181,18 +177,28 @@ def collect_day(run_date: date, bok_rows: Optional[list] = None):
     return values, status, effective
 
 
-def backfill_weekend(data: dict, run_date: date) -> None:
-    """run_date가 월요일이면, 직전 토/일을 직전 금요일 값으로 백필한다."""
+def backfill_weekend(
+    data: dict,
+    run_date: date,
+    values: dict[str, Optional[float]],
+    status: dict[str, str],
+    effective: dict[str, Optional[str]],
+) -> None:
+    """run_date(월요일)의 직전 토/일에도 값을 채워 넣는다.
+
+    previous_business_day() 계산상 토요일/일요일/월요일은 모두 같은 "직전 영업일"로
+    수렴한다 (국내: 지난 금요일 종가, 해외 SOFR: 그 전주 목요일 발표값). 즉 월요일에
+    새로 수집한 값 자체가 토/일에 대해서도 정확히 같은 값이므로, 별도로 다시 조회할
+    필요 없이 월요일 수집 결과를 그대로 재사용하면 된다.
+    (예전에는 "직전 금요일 레코드"를 그대로 복사했는데, 금요일 레코드는 그보다 한
+    영업일 더 오래된 값을 담고 있어 토/일에 부정확한 값이 들어가는 문제가 있었다.)
+    """
     if run_date.weekday() != 0:  # 0 = Monday
         return
-    friday = run_date - timedelta(days=3)
     saturday = run_date - timedelta(days=2)
     sunday = run_date - timedelta(days=1)
-    friday_iso = fmt_iso(friday)
-    if friday_iso not in data["days"]:
-        return
-    copy_day_as_backfill(data, friday_iso, fmt_iso(saturday))
-    copy_day_as_backfill(data, friday_iso, fmt_iso(sunday))
+    upsert_day(data, fmt_iso(saturday), values, status, effective, backfilled=True)
+    upsert_day(data, fmt_iso(sunday), values, status, effective, backfilled=True)
 
 
 def main() -> int:
@@ -205,7 +211,7 @@ def main() -> int:
 
     data = load_history(HISTORY_PATH)
     upsert_day(data, fmt_iso(run_date), values, status, effective, backfilled=False)
-    backfill_weekend(data, run_date)
+    backfill_weekend(data, run_date, values, status, effective)
     save_history(HISTORY_PATH, data)
     export_history_to_xlsx(data, XLSX_PATH)
 

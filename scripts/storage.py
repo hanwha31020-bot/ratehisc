@@ -16,8 +16,9 @@ data/history.json 구조:
   }
 }
 
-- "backfilled": true 인 날짜는 주말(토/일)이라 실제로 수집을 돌리지 않고,
-  직전 금요일의 값을 그대로 복사해 넣은 날짜임을 표시한다.
+- "backfilled": true 인 날짜는 주말(토/일)이라 그 자체로는 거래일이 아니지만,
+  "직전 영업일" 계산상 다음 월요일과 완전히 동일한 대상일로 수렴하므로 그 월요일
+  수집 결과를 그대로 재사용해 채운 날짜임을 표시한다.
 - status 값: "ok"(정상수집), "blocked"(접속차단 등 실패, 값은 null), "no_data"(대상일 데이터 없음)
 """
 from __future__ import annotations
@@ -81,17 +82,3 @@ def upsert_day(
         "effective_date": effective_date,
         "backfilled": backfilled,
     }
-
-
-def copy_day_as_backfill(data: dict[str, Any], src_iso_date: str, dst_iso_date: str) -> bool:
-    """src_iso_date의 값을 그대로 dst_iso_date에 복사(주말 백필용). 성공하면 True."""
-    src = data["days"].get(src_iso_date)
-    if src is None:
-        return False
-    data["days"][dst_iso_date] = {
-        "values": dict(src["values"]),
-        "status": dict(src["status"]),
-        "effective_date": dict(src["effective_date"]),
-        "backfilled": True,
-    }
-    return True
