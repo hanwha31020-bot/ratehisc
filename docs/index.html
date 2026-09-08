@@ -32,6 +32,15 @@
   header { margin-bottom: 28px; }
   h1 { font-size: 24px; margin: 0 0 6px; letter-spacing: -0.02em; }
   .sub { color: var(--text-muted); font-size: 13px; }
+  .sub-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .refresh-link {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .refresh-link:hover { text-decoration: underline; }
   .card {
     background: var(--card-bg);
     border: 1px solid var(--border);
@@ -164,7 +173,17 @@
 <div class="wrap">
   <header>
     <h1>금리 대시보드</h1>
-    <div class="sub" id="lastUpdated">불러오는 중...</div>
+    <div class="sub-row">
+      <span class="sub" id="lastUpdated">불러오는 중...</span>
+      <a
+        class="refresh-link"
+        href="https://github.com/zunouinvestment/zunoinfo/actions/workflows/fetch-rates.yml"
+        target="_blank"
+        rel="noopener"
+        title="GitHub Actions에서 'Fetch daily rates'를 수동 실행합니다 (GitHub 로그인 필요)"
+        >⟳ 지금 값 갱신하기</a
+      >
+    </div>
   </header>
 
   <div class="card">

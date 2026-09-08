@@ -2,9 +2,14 @@ name: Fetch daily rates
 
 on:
   schedule:
-    # 매일 KST 오전 7시 (UTC 22:00, 전날) 월~금(KST) 실행
+    # 매일 KST 오전 7시 (UTC 22:00, 전날) 월~금(KST) 1차 실행
     # cron 요일은 UTC 기준: 일(0)~목(4) 22:00 UTC == 월~금 07:00 KST
     - cron: "0 22 * * 0-4"
+    # GitHub Actions의 schedule 트리거는 부하가 몰리면 몇 분~몇십 분,
+    # 드물게는 그 회차가 아예 스킵될 수 있다(GitHub 공식 문서에 명시된 한계).
+    # 1시간 뒤 KST 8시에 같은 작업을 한 번 더 재시도한다 - 이미 성공했다면
+    # git diff에 변경이 없어 "변경 사항 없음"으로 조용히 끝난다.
+    - cron: "0 23 * * 0-4"
   workflow_dispatch: {}
 
 permissions:

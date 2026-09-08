@@ -81,7 +81,9 @@ docs/                    GitHub Pages로 배포되는 웹사이트
 4. 성공하면 `docs/data/history.json`, `docs/data/history.xlsx` 가 자동으로 커밋됩니다.
 5. Pages 사이트를 새로고침하면 오늘자 금리가 표시됩니다.
 
-이후로는 매일 KST 오전 7시에 자동으로 실행됩니다. (스케줄 시각을 바꾸고 싶으면 `.github/workflows/fetch-rates.yml`의 `cron` 값을 수정하세요. UTC 기준이라 KST보다 9시간 빠릅니다.)
+이후로는 매일 KST 오전 7시에 자동으로 실행됩니다 (GitHub Actions의 예약 실행이 가끔 지연/스킵될 수 있어, 8시에 한 번 더 재시도합니다 - 이미 성공했으면 조용히 끝납니다). 스케줄 시각을 바꾸고 싶으면 `.github/workflows/fetch-rates.yml`의 `cron` 값을 수정하세요. UTC 기준이라 KST보다 9시간 빠릅니다.
+
+혹시 예약 실행이 둘 다 놓쳐서 오늘자가 안 들어왔다면, 사이트 상단의 **"지금 값 갱신하기"** 링크로 바로 이동해서 **Run workflow**를 눌러 즉시 채울 수 있습니다 (GitHub 로그인 필요).
 
 ## 꼭 확인해야 할 점 (중요)
 
@@ -92,11 +94,13 @@ docs/                    GitHub Pages로 배포되는 웹사이트
 
 처음 시작할 때처럼 이력이 하루치밖에 없다면, 아래 방법으로 과거 영업일치를 한 번에 채울 수 있습니다 (터미널 필요 없음, GitHub Actions에서 실행).
 
-1. 저장소의 **Actions** 탭 → 왼쪽에서 **"Backfill rates (manual)"** 선택
+1. 저장소의 **Actions** 탭 → 왼쪽에서 **"Backfill rates"** 선택
 2. 오른쪽 **Run workflow** 클릭 → `days`에 채우고 싶은 영업일 수 입력 (기본값 22 = 약 한 달) → **Run workflow**
 3. 완료되면 `docs/data/history.json`, `docs/data/history.xlsx`에 과거 영업일치가 추가로 커밋됩니다.
 
 오늘자(가장 최근 영업일)는 매일 자동 실행되는 "Fetch daily rates" 쪽 몫이라 백필 대상에서 제외됩니다. 여러 번 실행해도 같은 날짜는 최신 결과로 덮어써질 뿐이라 안전합니다.
+
+이 워크플로우는 매주 일요일(KST 오전 8시)에도 자동으로 한 번 더 실행되어, "Fetch daily rates"가 어느 날 예약 실행을 놓쳐 빠진 날짜가 생겼더라도 최근 22영업일 범위 안이면 자동으로 복구됩니다.
 
 ## 로컬에서 테스트하기
 

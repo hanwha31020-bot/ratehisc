@@ -1,6 +1,13 @@
-name: Backfill rates (manual)
+name: Backfill rates
 
 on:
+  schedule:
+    # 매일 아침 "Fetch daily rates"의 schedule 트리거가 가끔 스킵/지연될 수 있어
+    # (GitHub Actions의 알려진 한계), 매주 일요일 KST 오전 8시에 최근 22영업일을
+    # 다시 훑어서 빠진 날짜가 있으면 자동으로 채워 넣는 자체 복구용 실행.
+    # (KST 일요일 08:00 = UTC 토요일 23:00, cron 요일은 UTC 기준)
+    # 이미 다 채워져 있으면 변경 사항이 없어 조용히 끝난다.
+    - cron: "0 23 * * 6"
   workflow_dispatch:
     inputs:
       days:
@@ -34,7 +41,7 @@ jobs:
         run: pip install --no-cache-dir requests beautifulsoup4 openpyxl
 
       - name: Run backfill script
-        run: python scripts/backfill.py --days "${{ github.event.inputs.days }}"
+        run: python scripts/backfill.py --days "${{ github.event.inputs.days || '22' }}"
 
       - name: Commit and push if changed
         run: |
@@ -44,6 +51,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "변경 사항 없음"
           else
-            git commit -m "chore: backfill rates (${{ github.event.inputs.days }} business days)"
+            git commit -m "chore: backfill rates (${{ github.event.inputs.days || '22' }} business days)"
             git push
           fi
