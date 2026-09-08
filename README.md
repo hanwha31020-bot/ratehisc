@@ -1,6 +1,6 @@
 # 금리 자동수집 대시보드
 
-매일 한국시간(KST) 오전 7시에 9개 금리를 자동으로 수집해서, GitHub Pages 웹사이트에서 확인할 수 있게 해주는 완전 무료 자동화입니다.
+매일 한국시간(KST) 오전 6시에 9개 금리를 자동으로 수집해서, GitHub Pages 웹사이트에서 확인할 수 있게 해주는 완전 무료 자동화입니다.
 
 - 자동 실행: GitHub Actions (무료)
 - 웹사이트 호스팅: GitHub Pages (무료)
@@ -81,7 +81,7 @@ docs/                    GitHub Pages로 배포되는 웹사이트
 4. 성공하면 `docs/data/history.json`, `docs/data/history.xlsx` 가 자동으로 커밋됩니다.
 5. Pages 사이트를 새로고침하면 오늘자 금리가 표시됩니다.
 
-이후로는 매일 KST 오전 7시에 자동으로 실행됩니다 (GitHub Actions의 예약 실행이 가끔 지연/스킵될 수 있어, 8시에 한 번 더 재시도합니다 - 이미 성공했으면 조용히 끝납니다). 스케줄 시각을 바꾸고 싶으면 `.github/workflows/fetch-rates.yml`의 `cron` 값을 수정하세요. UTC 기준이라 KST보다 9시간 빠릅니다.
+이후로는 매일 KST 오전 6시에 자동으로 실행됩니다 (GitHub Actions의 예약 실행이 가끔 지연/스킵될 수 있어, 7시에 한 번 더 재시도합니다 - 이미 성공했으면 조용히 끝납니다). 스케줄 시각을 바꾸고 싶으면 `.github/workflows/fetch-rates.yml`의 `cron` 값을 수정하세요. UTC 기준이라 KST보다 9시간 빠릅니다.
 
 혹시 예약 실행이 둘 다 놓쳐서 오늘자가 안 들어왔다면, 사이트 상단의 **"지금 값 갱신하기"** 링크로 바로 이동해서 **Run workflow**를 눌러 즉시 채울 수 있습니다 (GitHub 로그인 필요).
 
