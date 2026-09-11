@@ -29,7 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from date_utils import KST, compute_targets, fmt_iso, find_available  # noqa: E402
 from sources import bok, kofia, sofr  # noqa: E402
-from storage import load_history, save_history, upsert_day  # noqa: E402
+from storage import load_history, record_run, save_history, upsert_day  # noqa: E402
 from export_xlsx import export_history_to_xlsx  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -217,6 +217,7 @@ def main() -> int:
     data = load_history(HISTORY_PATH)
     upsert_day(data, fmt_iso(domestic_target), values, status, effective, backfilled=False)
     backfill_weekend(data, domestic_target, values, status, effective)
+    record_run(data)
     save_history(HISTORY_PATH, data)
     export_history_to_xlsx(data, XLSX_PATH)
 

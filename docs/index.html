@@ -189,6 +189,7 @@
     <h1>금리 대시보드</h1>
     <div class="sub-row">
       <span class="sub" id="lastUpdated">불러오는 중...</span>
+      <span class="sub">· 매일 오전 7시 자동 업데이트</span>
       <a
         class="refresh-link"
         href="javascript:void(0)"
@@ -266,7 +267,7 @@
     <a class="download" href="data/history.xlsx"><button class="secondary">history.xlsx 다운로드</button></a>
   </div>
 
-  <footer>매일 한국시간 오전 6시에 자동 수집됩니다.</footer>
+  <footer>매일 한국시간 오전 7시에 자동 수집됩니다.</footer>
 </div>
 
 <script>
@@ -579,7 +580,8 @@ async function init() {
   if (last) {
     document.getElementById("todayDateLabel").textContent = "(" + last.date + ")";
     renderTiles(document.getElementById("todayGrid"), last.record, last.date);
-    document.getElementById("lastUpdated").textContent = "마지막 갱신일: " + last.date;
+    const runNote = HISTORY.last_run_at ? ` (${HISTORY.last_run_at} 실행)` : "";
+    document.getElementById("lastUpdated").textContent = "마지막 갱신일: " + last.date + runNote;
     document.getElementById("lookupDate").value = last.date;
   } else {
     document.getElementById("lastUpdated").textContent = "아직 수집된 데이터가 없습니다.";
