@@ -12,8 +12,12 @@
    나중에 파일을 열어봤을 때 "2026-09-04" 밑에 실제 9/4일자 값이 들어있게 된다.
    (실행일을 키로 쓰면 "2026-09-07" 밑에 사실은 9/4일자 값이 들어있는 식으로 라벨과
    내용이 하루 이상 어긋나는 문제가 있었다.)
-5. 주말(토/일) 백필: 오늘이 월요일이면 직전 토/일에도 오늘 수집한 값을 채움
-   (토/일/월요일은 "직전 영업일" 계산이 동일하게 수렴하므로 재조회 없이 재사용 가능)
+5. 주말(토/일) 백필: 국내 대상일이 월요일이면(=화요일 실행 시) 그 직전 토/일 레코드를
+   완성함 - 국내(KOFIA/BOK)는 이미 저장돼 있는 지난 금요일 레코드의 값을 그대로
+   쓰고, 해외(SOFR)만 방금 수집한 월요일 레코드의 값으로 대체한다. 금요일 레코드
+   자체의 SOFR는 아직 발표 전(그 전날인 목요일자)이라 못 쓰고, 뉴욕 연은이 대상일의
+   다음 영업일에야 값을 공시하는 특성상 월요일 레코드에 담긴 SOFR라야 비로소
+   확정된 금요일자 값이기 때문이다.
 6. data/history.json 저장 + data/history.xlsx 재생성
 7. 실패한 항목이 있으면 GitHub Actions 경고 어노테이션 출력
 """
@@ -167,6 +171,11 @@ def fetch_foreign(foreign_target: date):
     return values, status, effective
 
 
+# fetch_foreign()이 채우는 지표 이름들. backfill_weekend()가 국내/해외 값을
+# 서로 다른 소스에서 가져와 섞을 때 어떤 키가 "해외"인지 구분하는 데 쓴다.
+FOREIGN_METRICS = {"sofr"}
+
+
 def collect_for_target(domestic_target: date, foreign_target: date, bok_rows: Optional[list] = None):
     """domestic_target/foreign_target을 직접 지정해서 금리를 수집한다 (values, status,
     effective_date 튜플). backfill.py처럼 "실행일"이라는 개념 없이 특정 기준일 하나를
@@ -192,18 +201,42 @@ def backfill_weekend(
     status: dict[str, str],
     effective: dict[str, Optional[str]],
 ) -> None:
-    """domestic_target이 금요일이면, 그 다음 토/일에도 같은 값을 채워 넣는다.
+    """domestic_target이 월요일이면, 그 직전 토/일 레코드를 완성한다.
 
-    국내 대상일 계산상 토요일/일요일도 그 직전 금요일과 완전히 같은 기준일로
-    수렴한다 ("주말에는 새 시세가 없으므로 지난 금요일 값이 곧 주말 값이다").
-    그래서 별도 조회 없이 금요일 레코드를 그대로 재사용하면 된다.
+    토/일의 국내(KOFIA/BOK) 값은 지난 금요일 레코드(이미 저장돼 있음)의 값을 그대로
+    쓴다 - 주말에는 새 시세가 없으므로 금요일 종가가 곧 주말 값이다.
+
+    반면 해외(SOFR)는 금요일 레코드의 값을 쓰면 안 된다. 뉴욕 연은은 대상일의 다음
+    영업일에야 값을 공시하는데, 금요일 레코드가 만들어지는 시점(그 전 월요일 실행)에는
+    금요일자 SOFR가 아직 발표 전이라 목요일자 값이 대신 들어가 있다. 금요일자 SOFR가
+    실제로 공시되는 시점은 그 다음 월요일이므로, 지금 막 수집한 "월요일 레코드"의
+    SOFR(=foreign_target 계산상 금요일)라야 비로소 확정된 금요일자 값이다.
+
+    그래서 토/일은 "금요일 레코드 + 방금 수집한 월요일자 해외 값"을 합쳐서 만든다.
+    (금요일 레코드가 아직 없는 드문 경우엔 어쩔 수 없이 월요일 값을 통째로 쓴다 -
+    국내값이 월요일 종가로 잘못 들어가는 흠이 있지만, 다음 주간 백필 때 그 금요일
+    레코드가 채워지면서 정확히 맞춰진다.)
     """
-    if domestic_target.weekday() != 4:  # 4 = Friday
+    if domestic_target.weekday() != 0:  # 0 = Monday
         return
-    saturday = domestic_target + timedelta(days=1)
-    sunday = domestic_target + timedelta(days=2)
-    upsert_day(data, fmt_iso(saturday), values, status, effective, backfilled=True)
-    upsert_day(data, fmt_iso(sunday), values, status, effective, backfilled=True)
+    saturday = domestic_target - timedelta(days=2)
+    sunday = domestic_target - timedelta(days=1)
+    friday = domestic_target - timedelta(days=3)
+    friday_rec = data["days"].get(fmt_iso(friday))
+
+    if friday_rec is None:
+        weekend_values, weekend_status, weekend_effective = values, status, effective
+    else:
+        weekend_values = dict(friday_rec["values"])
+        weekend_status = dict(friday_rec["status"])
+        weekend_effective = dict(friday_rec["effective_date"])
+        for metric in FOREIGN_METRICS:
+            weekend_values[metric] = values.get(metric)
+            weekend_status[metric] = status.get(metric)
+            weekend_effective[metric] = effective.get(metric)
+
+    upsert_day(data, fmt_iso(saturday), weekend_values, weekend_status, weekend_effective, backfilled=True)
+    upsert_day(data, fmt_iso(sunday), weekend_values, weekend_status, weekend_effective, backfilled=True)
 
 
 def main() -> int:

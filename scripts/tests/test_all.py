@@ -106,27 +106,51 @@ class KofiaParsingTests(unittest.TestCase):
 
 
 class BackfillTests(unittest.TestCase):
-    def test_weekend_backfill_reuses_fridays_own_values(self):
-        # 금요일 레코드 자신의 국내 대상일 계산이 그 다음 토/일과 완전히 같은 값으로
-        # 수렴하므로, 금요일 수집 결과를 그대로 재사용해야 한다.
+    def test_weekend_backfill_merges_fridays_domestic_with_mondays_sofr(self):
+        # SOFR는 뉴욕 연은이 대상일의 다음 영업일에야 공시된다. 금요일 레코드가
+        # 만들어지는 시점(그 전 월요일 실행)엔 금요일자 SOFR가 아직 발표 전이라
+        # 목요일자 값이 대신 들어가 있고, 그 다음 월요일이 되어서야 진짜 금요일자
+        # SOFR를 알 수 있다. 그래서 주말은 "금요일의 국내값 + 월요일의 SOFR"를
+        # 섞어서 채워야 한다 - 어느 한쪽을 통째로 복사하면 안 된다.
         data = {"metrics": [], "days": {}}
-        friday_values = {"bok_base": 3.0, "sofr": 3.70}
-        friday_status = {"bok_base": "ok", "sofr": "ok"}
-        friday_effective = {"bok_base": "2026-08-27", "sofr": "2026-09-03"}
-        upsert_day(data, "2026-09-04", friday_values, friday_status, friday_effective)
-        backfill_weekend(data, date(2026, 9, 4), friday_values, friday_status, friday_effective)
-        self.assertIn("2026-09-05", data["days"])
-        self.assertIn("2026-09-06", data["days"])
-        self.assertTrue(data["days"]["2026-09-05"]["backfilled"])
-        self.assertTrue(data["days"]["2026-09-06"]["backfilled"])
-        self.assertEqual(data["days"]["2026-09-05"]["values"], friday_values)
-        self.assertEqual(data["days"]["2026-09-06"]["values"], friday_values)
+        friday_values = {"bok_base": 3.0, "cd91": 2.93, "sofr": 3.64}  # sofr: 아직 목요일자
+        friday_status = {"bok_base": "ok", "cd91": "ok", "sofr": "ok"}
+        friday_effective = {"bok_base": "2026-08-27", "cd91": "2026-09-04", "sofr": "2026-09-03"}
+        upsert_day(data, "2026-09-04", friday_values, friday_status, friday_effective)  # Friday
 
-    def test_weekend_backfill_noop_on_non_friday(self):
+        monday_values = {"bok_base": 3.0, "cd91": 2.95, "sofr": 3.65}  # cd91: 월요일 자체 종가
+        monday_status = {"bok_base": "ok", "cd91": "ok", "sofr": "ok"}
+        monday_effective = {"bok_base": "2026-08-27", "cd91": "2026-09-07", "sofr": "2026-09-04"}
+        upsert_day(data, "2026-09-07", monday_values, monday_status, monday_effective)  # Monday
+        backfill_weekend(data, date(2026, 9, 7), monday_values, monday_status, monday_effective)
+
+        for weekend_date in ("2026-09-05", "2026-09-06"):
+            self.assertIn(weekend_date, data["days"])
+            rec = data["days"][weekend_date]
+            self.assertTrue(rec["backfilled"])
+            # 국내는 금요일 값 그대로
+            self.assertEqual(rec["values"]["cd91"], 2.93)
+            self.assertEqual(rec["effective_date"]["cd91"], "2026-09-04")
+            # 해외(SOFR)는 월요일 레코드 값으로 대체
+            self.assertEqual(rec["values"]["sofr"], 3.65)
+            self.assertEqual(rec["effective_date"]["sofr"], "2026-09-04")
+
+    def test_weekend_backfill_falls_back_to_monday_values_when_friday_missing(self):
+        # 금요일 레코드가 아직 없는 드문 경우엔 월요일 값을 통째로 쓴다.
+        data = {"metrics": [], "days": {}}
+        monday_values = {"bok_base": 3.0, "sofr": 3.65}
+        monday_status = {"bok_base": "ok", "sofr": "ok"}
+        monday_effective = {"bok_base": "2026-08-27", "sofr": "2026-09-04"}
+        upsert_day(data, "2026-09-07", monday_values, monday_status, monday_effective)
+        backfill_weekend(data, date(2026, 9, 7), monday_values, monday_status, monday_effective)
+        self.assertEqual(data["days"]["2026-09-05"]["values"], monday_values)
+        self.assertEqual(data["days"]["2026-09-06"]["values"], monday_values)
+
+    def test_weekend_backfill_noop_on_non_monday(self):
         data = {"metrics": [], "days": {}}
         values = {"bok_base": 3.0}
-        upsert_day(data, "2026-09-07", values, {"bok_base": "ok"}, {"bok_base": "2026-09-04"})
-        backfill_weekend(data, date(2026, 9, 7), values, {"bok_base": "ok"}, {"bok_base": "2026-09-04"})  # Monday
+        upsert_day(data, "2026-09-04", values, {"bok_base": "ok"}, {"bok_base": "2026-08-27"})
+        backfill_weekend(data, date(2026, 9, 4), values, {"bok_base": "ok"}, {"bok_base": "2026-08-27"})  # Friday
         self.assertEqual(len(data["days"]), 1)
 
 
