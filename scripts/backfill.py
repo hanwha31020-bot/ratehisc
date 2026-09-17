@@ -38,7 +38,7 @@ from fetch_rates import (  # noqa: E402
     gha_warning,
 )
 from sources import bok  # noqa: E402
-from storage import load_history, record_run, save_history, upsert_day  # noqa: E402
+from storage import load_history, record_run, save_history, snapshot_days, upsert_day  # noqa: E402
 
 
 def main() -> int:
@@ -57,6 +57,7 @@ def main() -> int:
         bok_rows = []
 
     data = load_history(HISTORY_PATH)
+    before = snapshot_days(data)
     for domestic_target in targets:
         gha_notice(f"백필 진행: {fmt_iso(domestic_target)}")
         foreign_target = previous_business_day(domestic_target)
@@ -67,7 +68,8 @@ def main() -> int:
         if failed:
             gha_warning(f"{fmt_iso(domestic_target)} 실패/누락 항목: {', '.join(failed)}")
 
-    record_run(data)
+    if snapshot_days(data) != before:
+        record_run(data)
     save_history(HISTORY_PATH, data)
     export_history_to_xlsx(data, XLSX_PATH)
     gha_notice(f"백필 완료: {fmt_iso(targets[0])} ~ {fmt_iso(targets[-1])} ({len(targets)}영업일)")

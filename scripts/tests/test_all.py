@@ -17,7 +17,7 @@ from date_utils import (
 )
 from sources.kofia import parse_cd_response, parse_cp_response, parse_bond_response
 from sources import bok
-from storage import upsert_day
+from storage import upsert_day, snapshot_days
 from fetch_rates import backfill_weekend
 
 FIXTURE_DIR = Path(__file__).resolve().parent.parent / "sources" / "tests"
@@ -152,6 +152,25 @@ class BackfillTests(unittest.TestCase):
         upsert_day(data, "2026-09-04", values, {"bok_base": "ok"}, {"bok_base": "2026-08-27"})
         backfill_weekend(data, date(2026, 9, 4), values, {"bok_base": "ok"}, {"bok_base": "2026-08-27"})  # Friday
         self.assertEqual(len(data["days"]), 1)
+
+
+class SnapshotDaysTests(unittest.TestCase):
+    def test_identical_content_produces_identical_snapshot(self):
+        # 예약 실행이 하루 여러 번 재시도돼도, 같은 값을 다시 upsert하면 스냅샷이
+        # 그대로여야 한다 - 이게 last_run_at을 불필요하게 다시 찍지 않는 근거다.
+        data = {"metrics": [], "days": {}}
+        values = {"bok_base": 3.0}
+        upsert_day(data, "2026-09-04", values, {"bok_base": "ok"}, {"bok_base": "2026-08-27"})
+        before = snapshot_days(data)
+        upsert_day(data, "2026-09-04", dict(values), {"bok_base": "ok"}, {"bok_base": "2026-08-27"})
+        self.assertEqual(snapshot_days(data), before)
+
+    def test_new_or_different_value_changes_snapshot(self):
+        data = {"metrics": [], "days": {}}
+        upsert_day(data, "2026-09-04", {"bok_base": 3.0}, {"bok_base": "ok"}, {"bok_base": "2026-08-27"})
+        before = snapshot_days(data)
+        upsert_day(data, "2026-09-04", {"bok_base": 3.25}, {"bok_base": "ok"}, {"bok_base": "2026-09-04"})
+        self.assertNotEqual(snapshot_days(data), before)
 
 
 if __name__ == "__main__":
