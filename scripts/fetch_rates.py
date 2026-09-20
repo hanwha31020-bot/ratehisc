@@ -251,10 +251,13 @@ def main() -> int:
     before = snapshot_days(data)
     upsert_day(data, fmt_iso(domestic_target), values, status, effective, backfilled=False)
     backfill_weekend(data, domestic_target, values, status, effective)
-    if snapshot_days(data) != before:
+    changed = snapshot_days(data) != before
+    if changed:
         record_run(data)
     save_history(HISTORY_PATH, data)
-    export_history_to_xlsx(data, XLSX_PATH)
+    # xlsx는 매번 생성시각이 달라져 내용이 같아도 git 변경으로 잡히므로, 값이 바뀐 때만 다시 쓴다
+    if changed or not XLSX_PATH.exists():
+        export_history_to_xlsx(data, XLSX_PATH)
 
     failed = [m for m, s in status.items() if s != "ok"]
     if failed:

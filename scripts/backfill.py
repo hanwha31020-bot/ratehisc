@@ -68,10 +68,12 @@ def main() -> int:
         if failed:
             gha_warning(f"{fmt_iso(domestic_target)} 실패/누락 항목: {', '.join(failed)}")
 
-    if snapshot_days(data) != before:
+    changed = snapshot_days(data) != before
+    if changed:
         record_run(data)
     save_history(HISTORY_PATH, data)
-    export_history_to_xlsx(data, XLSX_PATH)
+    if changed or not XLSX_PATH.exists():
+        export_history_to_xlsx(data, XLSX_PATH)
     gha_notice(f"백필 완료: {fmt_iso(targets[0])} ~ {fmt_iso(targets[-1])} ({len(targets)}영업일)")
     return 0
 
