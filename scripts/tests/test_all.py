@@ -154,6 +154,37 @@ class BackfillTests(unittest.TestCase):
         self.assertEqual(len(data["days"]), 1)
 
 
+class UpsertDayRetryTests(unittest.TestCase):
+    def test_later_failure_does_not_overwrite_earlier_success(self):
+        # 하루 안에서 재시도가 여러 번 도는데, 먼저 성공했던 항목을 나중 시도가
+        # 일시적으로 실패("blocked")하며 덮어쓰면 안 된다.
+        data = {"metrics": [], "days": {}}
+        upsert_day(
+            data, "2026-09-24",
+            {"bok_base": 3.0, "cd91": 2.93},
+            {"bok_base": "ok", "cd91": "ok"},
+            {"bok_base": "2026-08-27", "cd91": "2026-09-24"},
+        )
+        upsert_day(
+            data, "2026-09-24",
+            {"bok_base": None, "cd91": 2.93},
+            {"bok_base": "blocked", "cd91": "ok"},
+            {"bok_base": None, "cd91": "2026-09-24"},
+        )
+        rec = data["days"]["2026-09-24"]
+        self.assertEqual(rec["values"]["bok_base"], 3.0)
+        self.assertEqual(rec["status"]["bok_base"], "ok")
+        self.assertEqual(rec["effective_date"]["bok_base"], "2026-08-27")
+
+    def test_new_success_overwrites_earlier_failure(self):
+        data = {"metrics": [], "days": {}}
+        upsert_day(data, "2026-09-24", {"bok_base": None}, {"bok_base": "blocked"}, {"bok_base": None})
+        upsert_day(data, "2026-09-24", {"bok_base": 3.0}, {"bok_base": "ok"}, {"bok_base": "2026-08-27"})
+        rec = data["days"]["2026-09-24"]
+        self.assertEqual(rec["values"]["bok_base"], 3.0)
+        self.assertEqual(rec["status"]["bok_base"], "ok")
+
+
 class SnapshotDaysTests(unittest.TestCase):
     def test_identical_content_produces_identical_snapshot(self):
         # 예약 실행이 하루 여러 번 재시도돼도, 같은 값을 다시 upsert하면 스냅샷이

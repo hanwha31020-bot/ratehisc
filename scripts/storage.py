@@ -29,6 +29,8 @@ data/history.json 구조:
   시점(그 전 월요일)엔 금요일자 SOFR가 아직 발표 전(목요일자가 대신 들어감)이고,
   그 다음 월요일이 되어서야 비로소 확정된 금요일자 SOFR를 얻을 수 있기 때문이다.
 - status 값: "ok"(정상수집), "blocked"(접속차단 등 실패, 값은 null), "no_data"(대상일 데이터 없음)
+- 같은 날짜에 여러 번 upsert_day가 호출돼도(예: 하루 여러 번 재시도), 항목별로
+  이미 "ok"였던 값을 나중 시도의 실패값이 덮어쓰지 않는다 (upsert_day 참고).
 - "last_run_at"은 "days" 내용에 실제로 변화가 있었던 마지막 실행 시각(KST)이다.
   하루에 여러 번(예: 예약 실행 재시도) 스크립트가 돌아도 값이 그대로면 이 필드는
   갱신하지 않는다 - 그래야 "오늘 최초로 성공한 시각"이 유지되고, 재시도마다
@@ -103,9 +105,24 @@ def upsert_day(
     effective_date: dict[str, Optional[str]],
     backfilled: bool = False,
 ) -> None:
+    """지정한 날짜의 레코드를 기록한다. 같은 날짜에 이미 "ok"로 성공해둔 항목이
+    있는데 이번 호출에서 그 항목만 실패("ok"가 아님)로 왔다면, 그 항목은 기존 값을
+    그대로 유지한다 - 하루에 여러 번 재시도할 때, 일시적 접속 차단 등으로 나중
+    시도가 먼저 시도보다 더 나쁜 결과를 내더라도 이미 확보한 정상값을 덮어쓰지
+    않기 위함이다."""
+    existing = data["days"].get(iso_date)
+    merged_values = dict(values)
+    merged_status = dict(status)
+    merged_effective = dict(effective_date)
+    if existing:
+        for metric, new_status in status.items():
+            if new_status != "ok" and existing.get("status", {}).get(metric) == "ok":
+                merged_values[metric] = existing["values"][metric]
+                merged_status[metric] = existing["status"][metric]
+                merged_effective[metric] = existing["effective_date"][metric]
     data["days"][iso_date] = {
-        "values": values,
-        "status": status,
-        "effective_date": effective_date,
+        "values": merged_values,
+        "status": merged_status,
+        "effective_date": merged_effective,
         "backfilled": backfilled,
     }
