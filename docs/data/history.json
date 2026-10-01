@@ -4751,9 +4751,45 @@
         "sofr": 3.88,
         "treasury_3y": 4.015
       }
+    },
+    "2026-10-01": {
+      "backfilled": false,
+      "effective_date": {
+        "bok_base": "2026-08-27",
+        "cd91": "2026-10-01",
+        "corp_aa_1y": "2026-10-01",
+        "corp_aa_2y": "2026-10-01",
+        "corp_aa_3y": "2026-10-01",
+        "cp1m": "2026-10-01",
+        "cp3m": "2026-10-01",
+        "sofr": "2026-09-30",
+        "treasury_3y": "2026-10-01"
+      },
+      "status": {
+        "bok_base": "ok",
+        "cd91": "ok",
+        "corp_aa_1y": "ok",
+        "corp_aa_2y": "ok",
+        "corp_aa_3y": "ok",
+        "cp1m": "ok",
+        "cp3m": "ok",
+        "sofr": "ok",
+        "treasury_3y": "ok"
+      },
+      "values": {
+        "bok_base": 3.0,
+        "cd91": 3.22,
+        "corp_aa_1y": 4.344,
+        "corp_aa_2y": 4.605,
+        "corp_aa_3y": 4.681,
+        "cp1m": 3.28,
+        "cp3m": 3.41,
+        "sofr": 3.9,
+        "treasury_3y": 4.015
+      }
     }
   },
-  "last_run_at": "2026-10-01 06:00 KST",
+  "last_run_at": "2026-10-02 06:00 KST",
   "metrics": [
     "bok_base",
     "cd91",
