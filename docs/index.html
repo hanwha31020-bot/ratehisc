@@ -301,9 +301,23 @@ const STATUS_CLASS = { ok: "ok", blocked: "bad", no_data: "warn" };
 
 let HISTORY = { metrics: Object.keys(METRIC_LABELS), days: {} };
 
+// 소수점 2자리 반올림(반올림 기준: 5는 항상 올림). Number.toFixed()를 그대로 쓰면
+// 4.015 같은 값이 이진 부동소수점 오차(실제 저장값 4.014999...)때문에 4.02가 아니라
+// 4.01로 잘못 내림되는 경우가 있어서, 먼저 소수 4자리 문자열로 안정화한 뒤 그 정수값
+// 기준으로 직접 반올림한다.
+function roundHalfUp2(v) {
+  const n = Number(v);
+  const sign = n < 0 ? -1 : 1;
+  const n4 = Math.round(Number(Math.abs(n).toFixed(4)) * 10000);
+  const hundredths = Math.floor(n4 / 100);
+  const remainder = n4 - hundredths * 100;
+  const rounded = remainder >= 50 ? hundredths + 1 : hundredths;
+  return ((sign * rounded) / 100).toFixed(2);
+}
+
 function fmtValue(v) {
   if (v === null || v === undefined || v === "") return "-";
-  return Number(v).toFixed(2);
+  return roundHalfUp2(v);
 }
 
 // 반올림해서 보여준 값과 실제 원본값이 다르면(=원본이 소수점 셋째자리 이하를 갖고 있으면)
