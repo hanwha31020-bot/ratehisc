@@ -6,7 +6,8 @@
 1. 오늘(KST) 기준 국내/해외 대상일 계산
 2. 국내 소스(BOK, CD, CP, 회사채(AA-)+국고채권) 수집 (KOFIA 3종은 공휴일 등으로 데이터가
    없으면 자동으로 하루씩 더 앞으로 이동하며 재시도)
-3. 해외 소스(SOFR) 수집 ("대상일 이하 최신값" 방식으로 자체 처리)
+3. 해외 소스(SOFR) 수집 (대상일 값이 아직 발표 전이면 "pending"으로 비워두고, 이후 실행에서
+   refresh_recent_sofr()가 최근 레코드의 SOFR를 공시 이력 기준으로 다시 맞춰 채운다)
 4. data/history.json 에 "국내 대상일(domestic_target)" 기준으로 레코드 upsert.
    실행일(오늘) 자신이 아니라 실제로 조회한 데이터의 기준일을 키로 쓴다 - 이렇게 해야
    나중에 파일을 열어봤을 때 "2026-09-04" 밑에 실제 9/4일자 값이 들어있게 된다.
@@ -31,7 +32,7 @@ from typing import Optional
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from date_utils import KST, compute_targets, fmt_iso, find_available  # noqa: E402
+from date_utils import KST, compute_targets, fmt_iso, find_available, previous_business_day  # noqa: E402
 from sources import bok, kofia, sofr  # noqa: E402
 from storage import load_history, record_run, save_history, snapshot_days, upsert_day  # noqa: E402
 from export_xlsx import export_history_to_xlsx  # noqa: E402
@@ -153,13 +154,19 @@ def fetch_foreign(foreign_target: date):
     status: dict[str, str] = {}
     effective: dict[str, Optional[str]] = {}
 
-    # 5) SOFR
+    # 5) SOFR - 대상일 값이 아직 발표 전이면 전날 값으로 대신 채우지 않고 "pending"으로 비워둔다
+    #    (뉴욕 연은은 다음 미국 영업일에야 공시한다. 자세한 판정은 sofr.resolve_sofr 참고)
     try:
-        rate = sofr.fetch_sofr_on_or_before(foreign_target)
+        series = sofr.fetch_sofr_series(
+            foreign_target - timedelta(days=sofr.LOOKBACK_DAYS), max(foreign_target, date.today())
+        )
+        rate, sofr_status, sofr_date = sofr.resolve_sofr(series, foreign_target)
         values["sofr"] = rate
-        status["sofr"] = "ok" if rate is not None else "no_data"
-        effective["sofr"] = fmt_iso(foreign_target) if rate is not None else None
-        if rate is None:
+        status["sofr"] = sofr_status
+        effective["sofr"] = fmt_iso(sofr_date) if sofr_date else None
+        if sofr_status == "pending":
+            gha_notice(f"SOFR: {fmt_iso(foreign_target)}분이 아직 발표 전이라 비워둡니다 (발표되면 다음 실행에서 채워집니다)")
+        elif sofr_status != "ok":
             gha_warning("SOFR: 최근 10일 내 데이터를 찾지 못했습니다")
     except Exception as exc:  # noqa: BLE001
         values["sofr"] = None
@@ -239,6 +246,37 @@ def backfill_weekend(
     upsert_day(data, fmt_iso(sunday), weekend_values, weekend_status, weekend_effective, backfilled=True)
 
 
+def apply_sofr_series(data: dict, series: dict, run_date: date, lookback_days: int) -> None:
+    """최근 lookback_days일 이내 레코드의 SOFR를 공시 이력(series) 기준으로 다시 계산해서 덮어쓴다.
+
+    SOFR는 대상일의 다음 미국 영업일에야 공시되므로, 레코드를 만들던 시점에 비워뒀던
+    (pending) 값이 나중에 발표되면 여기서 채워진다. 반대로 예전 방식으로 "전날 값을 대상일
+    값인 것처럼" 저장해둔 레코드도 여기서 바로잡힌다. 일반 upsert와 달리 이미 "ok"인 값도
+    덮어쓰는데, series는 뉴욕 연은의 공시 이력 그 자체라서 그게 정답이기 때문이다.
+    레코드의 SOFR 대상일은 레코드 날짜의 직전 영업일이다 (주말 레코드는 금요일)."""
+    cutoff = run_date - timedelta(days=lookback_days)
+    for iso, rec in data["days"].items():
+        record_date = date.fromisoformat(iso)
+        if record_date < cutoff:
+            continue
+        rate, sofr_status, sofr_date = sofr.resolve_sofr(series, previous_business_day(record_date))
+        rec["values"]["sofr"] = rate
+        rec["status"]["sofr"] = sofr_status
+        rec["effective_date"]["sofr"] = fmt_iso(sofr_date) if sofr_date else None
+
+
+def refresh_recent_sofr(data: dict, run_date: date, lookback_days: int = 14) -> None:
+    start = run_date - timedelta(days=lookback_days + sofr.LOOKBACK_DAYS + 5)
+    try:
+        series = sofr.fetch_sofr_series(start, run_date)
+    except Exception as exc:  # noqa: BLE001
+        gha_warning(f"SOFR 재확인 실패 (최근 레코드는 그대로 둡니다): {exc}")
+        return
+    if not series:
+        return
+    apply_sofr_series(data, series, run_date, lookback_days)
+
+
 def main() -> int:
     run_date = date.today()  # GitHub Actions에서 TZ=Asia/Seoul로 실행 (workflow에서 설정)
     domestic_target, foreign_target = compute_targets(run_date)
@@ -251,6 +289,7 @@ def main() -> int:
     before = snapshot_days(data)
     upsert_day(data, fmt_iso(domestic_target), values, status, effective, backfilled=False)
     backfill_weekend(data, domestic_target, values, status, effective)
+    refresh_recent_sofr(data, run_date)
     changed = snapshot_days(data) != before
     if changed:
         record_run(data)

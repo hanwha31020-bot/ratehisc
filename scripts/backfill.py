@@ -36,6 +36,7 @@ from fetch_rates import (  # noqa: E402
     collect_for_target,
     gha_notice,
     gha_warning,
+    refresh_recent_sofr,
 )
 from sources import bok  # noqa: E402
 from storage import load_history, record_run, save_history, snapshot_days, upsert_day  # noqa: E402
@@ -68,6 +69,7 @@ def main() -> int:
         if failed:
             gha_warning(f"{fmt_iso(domestic_target)} 실패/누락 항목: {', '.join(failed)}")
 
+    refresh_recent_sofr(data, date.today(), lookback_days=args.days * 2)
     changed = snapshot_days(data) != before
     if changed:
         record_run(data)

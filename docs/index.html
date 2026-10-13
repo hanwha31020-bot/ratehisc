@@ -84,6 +84,7 @@
   .raw-value { font-size: 10px; color: var(--text-muted); border-top: 1px dashed var(--border); margin-top: 4px; padding-top: 3px; }
   .rate-tile .eff { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
   .rate-tile.status-blocked .value, .rate-tile.status-no_data .value { color: var(--bad); font-size: 15px; }
+  .rate-tile.status-pending .value { color: var(--text-muted); font-size: 15px; }
   td .value-row { font-size: 13px; }
   td .raw-value { margin-top: 2px; padding-top: 2px; }
   .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
@@ -296,8 +297,8 @@ const METRIC_LABELS = {
   treasury_3y: "국고채권(3년)",
   sofr: "SOFR",
 };
-const STATUS_LABEL = { ok: "정상", blocked: "수집실패", no_data: "데이터없음" };
-const STATUS_CLASS = { ok: "ok", blocked: "bad", no_data: "warn" };
+const STATUS_LABEL = { ok: "정상", blocked: "수집실패", no_data: "데이터없음", pending: "발표 전" };
+const STATUS_CLASS = { ok: "ok", blocked: "bad", no_data: "warn", pending: "warn" };
 
 let HISTORY = { metrics: Object.keys(METRIC_LABELS), days: {} };
 

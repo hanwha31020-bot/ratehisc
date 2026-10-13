@@ -16,9 +16,9 @@ from date_utils import (
     find_available,
 )
 from sources.kofia import parse_cd_response, parse_cp_response, parse_bond_response
-from sources import bok
+from sources import bok, sofr
 from storage import upsert_day, snapshot_days
-from fetch_rates import backfill_weekend
+from fetch_rates import apply_sofr_series, backfill_weekend
 
 FIXTURE_DIR = Path(__file__).resolve().parent.parent / "sources" / "tests"
 
@@ -152,6 +152,94 @@ class BackfillTests(unittest.TestCase):
         upsert_day(data, "2026-09-04", values, {"bok_base": "ok"}, {"bok_base": "2026-08-27"})
         backfill_weekend(data, date(2026, 9, 4), values, {"bok_base": "ok"}, {"bok_base": "2026-08-27"})  # Friday
         self.assertEqual(len(data["days"]), 1)
+
+
+class SofrResolveTests(unittest.TestCase):
+    def test_published_target_uses_its_own_value_and_date(self):
+        series = {date(2026, 10, 8): 3.87, date(2026, 10, 9): 3.91}
+        self.assertEqual(sofr.resolve_sofr(series, date(2026, 10, 9)), (3.91, "ok", date(2026, 10, 9)))
+
+    def test_unpublished_business_day_is_pending_not_previous_days_value(self):
+        # 10/9(금)분은 10/12가 미국 휴일이라 10/13에야 발표된다. 그 전에 10/8 값을 10/9 값처럼
+        # 채우면 안 된다.
+        series = {date(2026, 10, 7): 3.88, date(2026, 10, 8): 3.87}
+        self.assertEqual(sofr.resolve_sofr(series, date(2026, 10, 9)), (None, "pending", None))
+
+    def test_us_holiday_target_falls_back_to_last_published_day(self):
+        series = {date(2026, 10, 8): 3.87, date(2026, 10, 9): 3.91}
+        self.assertEqual(sofr.resolve_sofr(series, date(2026, 10, 12)), (3.91, "ok", date(2026, 10, 9)))
+
+    def test_gap_confirmed_by_later_publication_falls_back_even_without_calendar(self):
+        # 10/7(수)은 달력상 영업일이지만, 그 이후(10/8) 값이 이미 공시됐는데 10/7만 없다면
+        # 공시 안 하는 날이다.
+        series = {date(2026, 10, 6): 3.9, date(2026, 10, 8): 3.87}
+        self.assertEqual(sofr.resolve_sofr(series, date(2026, 10, 7)), (3.9, "ok", date(2026, 10, 6)))
+
+    def test_empty_series_is_no_data(self):
+        self.assertEqual(sofr.resolve_sofr({}, date(2026, 10, 9)), (None, "no_data", None))
+
+    def test_us_business_day_calendar(self):
+        for holiday in (date(2026, 10, 12), date(2026, 7, 3), date(2026, 4, 3), date(2026, 9, 7), date(2026, 12, 25)):
+            self.assertFalse(sofr.is_us_business_day(holiday), holiday)
+        # 재향군인의 날(11/11)이 토요일이던 2023년엔 금요일 11/10에 정상 공시됐다.
+        for workday in (date(2023, 11, 10), date(2026, 10, 9), date(2026, 10, 13)):
+            self.assertTrue(sofr.is_us_business_day(workday), workday)
+        self.assertFalse(sofr.is_us_business_day(date(2026, 10, 10)))  # 토요일
+
+
+def _sofr_rec(rate, status, eff):
+    return {
+        "values": {"sofr": rate},
+        "status": {"sofr": status},
+        "effective_date": {"sofr": eff},
+        "backfilled": False,
+    }
+
+
+class ApplySofrSeriesTests(unittest.TestCase):
+    def _data(self):
+        # 10/10~10/12는 예전 방식으로 "10/8 값을 10/9 값인 것처럼" 채워진 레코드
+        return {
+            "days": {
+                "2026-10-09": _sofr_rec(3.87, "ok", "2026-10-08"),
+                "2026-10-10": _sofr_rec(3.87, "ok", "2026-10-09"),
+                "2026-10-11": _sofr_rec(3.87, "ok", "2026-10-09"),
+                "2026-10-12": _sofr_rec(3.87, "ok", "2026-10-09"),
+            }
+        }
+
+    def test_stale_records_become_pending_then_filled_when_published(self):
+        data = self._data()
+        before_publication = {date(2026, 10, 7): 3.88, date(2026, 10, 8): 3.87}
+        apply_sofr_series(data, before_publication, date(2026, 10, 13), 14)
+        self.assertEqual(data["days"]["2026-10-09"]["effective_date"]["sofr"], "2026-10-08")
+        for iso in ("2026-10-10", "2026-10-11", "2026-10-12"):
+            rec = data["days"][iso]
+            self.assertIsNone(rec["values"]["sofr"], iso)
+            self.assertEqual(rec["status"]["sofr"], "pending", iso)
+            self.assertIsNone(rec["effective_date"]["sofr"], iso)
+
+        after_publication = {**before_publication, date(2026, 10, 9): 3.91}
+        apply_sofr_series(data, after_publication, date(2026, 10, 14), 14)
+        for iso in ("2026-10-10", "2026-10-11", "2026-10-12"):
+            rec = data["days"][iso]
+            self.assertEqual(rec["values"]["sofr"], 3.91, iso)
+            self.assertEqual(rec["status"]["sofr"], "ok", iso)
+            self.assertEqual(rec["effective_date"]["sofr"], "2026-10-09", iso)
+
+    def test_record_after_us_holiday_uses_last_published_day(self):
+        # 10/13 레코드의 SOFR 대상일은 10/12(미국 휴일)라서 10/9 값이 맞다.
+        data = {"days": {"2026-10-13": _sofr_rec(None, "pending", None)}}
+        series = {date(2026, 10, 8): 3.87, date(2026, 10, 9): 3.91}
+        apply_sofr_series(data, series, date(2026, 10, 14), 14)
+        rec = data["days"]["2026-10-13"]
+        self.assertEqual((rec["values"]["sofr"], rec["status"]["sofr"], rec["effective_date"]["sofr"]),
+                         (3.91, "ok", "2026-10-09"))
+
+    def test_records_older_than_lookback_are_untouched(self):
+        data = {"days": {"2026-09-01": _sofr_rec(1.0, "ok", "2026-08-31")}}
+        apply_sofr_series(data, {date(2026, 10, 9): 3.91}, date(2026, 10, 14), 14)
+        self.assertEqual(data["days"]["2026-09-01"]["values"]["sofr"], 1.0)
 
 
 class UpsertDayRetryTests(unittest.TestCase):
