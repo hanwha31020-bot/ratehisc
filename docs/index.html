@@ -872,7 +872,7 @@ function callStartFor(date, manual) {
   return auto ? auto.value : null;
 }
 
-// row(엑셀 행 번호)를 주면 계산열(101·102·105·111~113)을 시트와 같은 수식(=C1416+$D$2 등)으로 만든다.
+// row(엑셀 행 번호)를 주면 날짜·요일과 계산열(101·102·105·111~113)을 시트와 같은 수식(=C1416+$D$2 등)으로 만든다.
 // row를 생략하면 같은 열을 계산된 값으로 채운다.
 function buildSheetRow(date, manual, row) {
   const rec = HISTORY.days[date];
@@ -908,8 +908,9 @@ function buildSheetRow(date, manual, row) {
   const useFormula = Number.isInteger(row) && row > 0;
   const derived = (formula, value) => (useFormula ? (value === null ? null : formula) : value);
   const base1 = plus(bok, r.base1);
+  // 날짜(A)와 요일(B)도 시트와 같은 수식: A는 윗행+1, B는 TEXT(A,"AAA")  (시트의 공유 수식과 동일)
   const cells = [
-    date, dowLabel(date), bok,
+    derived(`=A${row - 1}+1`, date), derived(`=TEXT(A${row},"AAA")`, dowLabel(date)), bok,
     derived(`=C${row}+$D$2`, base1),
     derived(`=C${row}+$E$2`, plus(bok, r.base2)),
     cd, cp3,
