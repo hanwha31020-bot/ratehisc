@@ -734,6 +734,10 @@ const SHEET_COLUMNS = [
   [103, "CD(3월)"], [104, "CP(3월)"], [105, "고정금리"], [106, "CP(1월)"],
   [111, "별도금리_1"], [112, "별도금리_2"], [113, "별도금리_3"],
   [114, "AA-(1Y)"], [115, "AA-(2Y)"], [116, "AA-(3Y)"], [117, "콜금리"], [118, "SOFR"], [119, "미국2년"],
+  // S~AI: 변동내역 확인 (각 금리의 전행 대비 변동, 맨 끝 CHK = 변동 칸 수)
+  [100, "Δ한국은행"], [101, "Δ기본1"], [102, "Δ기본2"], [103, "ΔCD"], [104, "ΔCP3M"], [105, "Δ고정"], [106, "ΔCP1M"],
+  [111, "Δ별도1"], [112, "Δ별도2"], [113, "Δ별도3"], [114, "ΔAA-1Y"], [115, "ΔAA-2Y"], [116, "ΔAA-3Y"],
+  [117, "Δ콜금리"], [118, "ΔSOFR"], [119, "Δ미국2년"], ["CHK", "변동 칸 수"],
 ];
 const CALL_COL = 15; // 콜금리(117) 열(P)
 const MANUAL_KEY = "rateSheetManualInputs";
@@ -761,6 +765,11 @@ const SHEET_CELL_STYLES = [
   { fmt: "General", align: "center", br: "thin" }, // P 117
   { fmt: '"0.00"', align: "center" }, // Q 118
   { fmt: '"0.00"', align: "center", br: "thin" }, // R 119
+  // S~AI 변동내역: 시트 서식 General, 가운데 정렬 (S·T는 오른쪽만 hairline, 나머지는 좌우 hairline)
+  { fmt: "General", align: "center", br: "hair" }, // S
+  { fmt: "General", align: "center", br: "hair" }, // T
+  ...Array.from({ length: 14 }, () => ({ fmt: "General", align: "center", bl: "hair", br: "hair" })), // U~AH
+  { fmt: "General", align: "center" }, // AI CHK
 ];
 
 // 저장소(localStorage)를 못 쓰는 환경(시크릿 창 등)에서도 이 세션 동안은 입력값이 유지되도록
@@ -874,7 +883,7 @@ function callStartFor(date, manual) {
 
 // row(엑셀 행 번호)를 주면 날짜·요일과 계산열(101·102·105·111~113)을 시트와 같은 수식(=C1416+$D$2 등)으로 만든다.
 // row를 생략하면 같은 열을 계산된 값으로 채운다.
-function buildSheetRow(date, manual, row) {
+function buildSheetRow(date, manual, row, noChange) {
   const rec = HISTORY.days[date];
   const keys = manualKeys(date);
   const r = SHEET_RULES;
@@ -908,20 +917,67 @@ function buildSheetRow(date, manual, row) {
   const useFormula = Number.isInteger(row) && row > 0;
   const derived = (formula, value) => (useFormula ? (value === null ? null : formula) : value);
   const base1 = plus(bok, r.base1);
-  // 날짜(A)와 요일(B)도 시트와 같은 수식: A는 윗행+1, B는 TEXT(A,"AAA")  (시트의 공유 수식과 동일)
-  const cells = [
-    derived(`=A${row - 1}+1`, date), derived(`=TEXT(A${row},"AAA")`, dowLabel(date)), bok,
-    derived(`=C${row}+$D$2`, base1),
-    derived(`=C${row}+$E$2`, plus(bok, r.base2)),
-    cd, cp3,
-    derived(`=D${row}+10`, plus(base1, r.fixedAdd)),
-    cp1,
-    derived(`=G${row}+$J$2`, plus(cp3, r.a1cp[0])),
-    derived(`=G${row}+$K$2`, plus(cp3, r.a1cp[1])),
-    derived(`=G${row}+$L$2`, plus(cp3, r.a1cp[2])),
+  // 값으로 본 한 행(A~R). 수식 칸의 계산값이자 변동내역 계산의 입력이다.
+  const vals = [
+    date, dowLabel(date), bok, base1, plus(bok, r.base2), cd, cp3, plus(base1, r.fixedAdd), cp1,
+    plus(cp3, r.a1cp[0]), plus(cp3, r.a1cp[1]), plus(cp3, r.a1cp[2]),
     m1, m2, m3, plus(callStart, r.callAdd), sofr, us2y,
   ];
-  return { cells: cells.map((c) => (c === null || c === undefined ? "" : String(c))), missing };
+  // 날짜(A)와 요일(B)도 시트와 같은 수식: A는 윗행+1, B는 TEXT(A,"AAA")  (시트의 공유 수식과 동일)
+  const cells = [
+    derived(`=A${row - 1}+1`, vals[0]), derived(`=TEXT(A${row},"AAA")`, vals[1]), vals[2],
+    derived(`=C${row}+$D$2`, vals[3]),
+    derived(`=C${row}+$E$2`, vals[4]),
+    vals[5], vals[6],
+    derived(`=D${row}+10`, vals[7]),
+    vals[8],
+    derived(`=G${row}+$J$2`, vals[9]),
+    derived(`=G${row}+$K$2`, vals[10]),
+    derived(`=G${row}+$L$2`, vals[11]),
+    vals[12], vals[13], vals[14], vals[15], vals[16], vals[17],
+  ].map((c) => (c === null || c === undefined ? "" : String(c)));
+  if (!noChange) {
+    // 변동내역(S~AI열): 시트와 같은 수식. 미리보기/값 복사용 계산값은 직전 행(직전 기록일)과 비교해서 만든다.
+    const prev = prevRecordDate(date);
+    const prevVals = prev && HISTORY.days[prev] ? buildSheetRow(prev, manual, undefined, true).vals : null;
+    cells.push(...changeCells(vals, prevVals, useFormula ? row : null));
+  }
+  return { cells, missing, vals };
+}
+
+// 열 번호(0=A)를 엑셀 열 이름으로 (0→A, 18→S, 34→AI)
+function colLetter(i) {
+  let s = "";
+  for (let n = i + 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+  return s;
+}
+
+// 변동내역 S~AH: 각 금리(C~R) = IF(올해값-전행값=0,"변동없음",차이). M~R(114~119)은 시트처럼 ROUND(,2) 후 비교.
+// AI(CHK): 변동 칸 수 = COUNTIF(S:AH,"<>변동없음").  row가 없으면 같은 칸을 계산값으로 채운다 (값을 알 수 없으면 빈 칸).
+function changeCells(vals, prevVals, row) {
+  const out = [];
+  let count = 0;
+  for (let i = 2; i <= 17; i++) {
+    const L = colLetter(i);
+    const rounded = i >= 12;
+    let value = "";
+    const cur = vals[i];
+    const before = prevVals ? prevVals[i] : null;
+    if (cur !== null && cur !== undefined && before !== null && before !== undefined) {
+      const d = rounded ? addDec(Number(roundHalfUp2(cur)), -Number(roundHalfUp2(before))) : addDec(cur, -before);
+      value = d === 0 ? "변동없음" : String(d);
+    }
+    if (value !== "" && value !== "변동없음") count++;
+    if (row) {
+      const a = rounded ? `ROUND(${L}${row},2)` : `${L}${row}`;
+      const b = rounded ? `ROUND(${L}${row - 1},2)` : `${L}${row - 1}`;
+      out.push(`=IF(${a}-${b}=0,"변동없음",${a}-${b})`);
+    } else {
+      out.push(value);
+    }
+  }
+  out.push(row ? `=COUNTIF(S${row}:AH${row},"<>변동없음")` : String(count));
+  return out;
 }
 
 function prevRecordDate(date) {
@@ -954,6 +1010,7 @@ function changedFlags(date, manual) {
   return [
     false, false, bok, bok, bok, ch("cd91"), cp3, bok, ch("cp1m"), cp3, cp3, cp3,
     ch("corp_aa_1y"), ch("corp_aa_2y"), ch("corp_aa_3y"), call, ch("sofr"), us,
+    ...Array(17).fill(false), // S~AI 변동내역은 빨간 글자 표시 없음
   ];
 }
 
@@ -1293,6 +1350,10 @@ async function init() {
     // 콜시작금리 자동값이 없어도 복사는 되고, 그 칸만 직접 입력하게 된다
   }
   addCallRateMetric();
+  // 국고채권(3년)은 맨 뒤(SOFR 다음)에 둔다.
+  if (HISTORY.metrics.includes("treasury_3y")) {
+    HISTORY.metrics = HISTORY.metrics.filter((m) => m !== "treasury_3y").concat("treasury_3y");
+  }
 
   const metricPicker = document.getElementById("metricPicker");
   HISTORY.metrics.forEach((m) => {
