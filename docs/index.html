@@ -81,6 +81,8 @@
   .delta { font-size: 11px; font-weight: 700; }
   .delta.up { color: var(--bad); }
   .delta.down { color: var(--accent); }
+  .call-calc { font-size: 10.5px; color: var(--text-muted); border-top: 1px dashed var(--border); margin-top: 4px; padding-top: 3px; line-height: 1.5; }
+  .call-calc .win { color: var(--text); font-weight: 600; }
   .raw-value { font-size: 10px; color: var(--text-muted); border-top: 1px dashed var(--border); margin-top: 4px; padding-top: 3px; }
   .rate-tile .eff { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
   .rate-tile.status-blocked .value, .rate-tile.status-no_data .value { color: var(--bad); font-size: 15px; }
@@ -259,6 +261,7 @@
         <li><b>한국은행 기준금리</b>: 한국은행(BOK) 공식 발표 기준</li>
         <li><b>CD(3개월) · A1CP(1개월/3개월) · 회사채(AA-) · 국고채권(3년)</b>: 금융투자협회(KOFIA) 채권정보센터 시가평가수익률, 4개 채권평가사(나이스피앤아이·한국자산평가·KIS자산평가·에프앤자산평가) 평균값</li>
         <li><b>SOFR</b>: 미국 뉴욕 연방준비은행(New York Fed) 공식 API</li>
+        <li><b>콜금리(시작금리+10bp)</b>: 한국자금중개(KMB)가 매 영업일 게시하는 "콜 레포 시장 동향" PDF에서 읽은 값으로 산출합니다. 콜시작금리 = MAX(기준금리 + 3bp, 레포 시작금리 + 2bp)이고 여기에 10bp를 더한 값이 콜금리입니다. 레포 시작금리는 PDF 상단 지표표의 레포(일반채) 칸이며, 범위(예: 3.04~3.14%)로 나오면 하한을 씁니다. 계산에 쓴 각 값은 콜금리 카드 아래에 표시됩니다. PDF는 보통 해당 영업일 저녁에 올라와 다음 날 아침에 반영되지만, 게시가 늦어지면 "수집 전"으로 표시됩니다.</li>
       </ul>
       <div class="source-note-footer">각 금리는 실행일 기준 전영업일 값이며, 정확한 기준일은 카드 하단에 표시됩니다.</div>
     </div>
@@ -320,6 +323,7 @@
       <li><a href="https://www.bok.or.kr/portal/singl/baseRate/list.do?dataSeCd=01&menuNo=200643" target="_blank" rel="noopener">한국은행 기준금리</a></li>
       <li><a href="https://kofiabond.or.kr/websquare/websquare.html?w2xPath=/xml/main.xml" target="_blank" rel="noopener">금융투자협회(KOFIA) 채권정보센터</a> — CD·A1CP·회사채(AA-)·국고채권</li>
       <li><a href="https://www.newyorkfed.org/markets/reference-rates/sofr" target="_blank" rel="noopener">뉴욕 연방준비은행 - SOFR</a></li>
+      <li><a href="https://www.kmbco.com/kor/trendi/money_trend.do" target="_blank" rel="noopener">한국자금중개(KMB) - 콜 레포 시장 동향</a> — 콜금리(콜시작금리) 산출용 일일 PDF</li>
       <li><a href="https://kr.investing.com/rates-bonds/u.s.-2-year-bond-yield-historical-data" target="_blank" rel="noopener">Investing.com - 미국 2년 국채수익률</a> — 참고용 링크입니다 (접속 차단 문제로 이 사이트에서는 자동 수집하지 않습니다)</li>
     </ul>
   </div>
@@ -417,6 +421,33 @@ function deltaHtml(dateStr, metric, val) {
   return `<span class="delta ${cls}">${sign}${Math.abs(delta).toFixed(2)}</span>`;
 }
 
+// 콜시작금리 = MAX(기준금리+3bp, 레포 시작금리+2bp)의 각 항목을 풀어 쓴다. 소수 둘째 자리를 bp 정수로 계산한다.
+// 레포(일반채) 칸이 범위(3.04~3.14%)이면 하한이 레포 시작금리다.
+function callBreakdown(auto) {
+  const f2 = (bp) => (bp / 100).toFixed(2);
+  const baseBp = Math.round(auto.base * 100) + 3;
+  const repoBp = Math.round(auto.repo_low * 100) + 2;
+  const isRange = auto.repo_high !== auto.repo_low;
+  return {
+    baseText: `기준금리 ${auto.base.toFixed(2)}% + 3bp = ${f2(baseBp)}`,
+    repoText: `레포 시작 ${isRange ? `${auto.repo_low.toFixed(2)}~${auto.repo_high.toFixed(2)}% 중 하한 ` : ""}${auto.repo_low.toFixed(2)}% + 2bp = ${f2(repoBp)}`,
+    repoWins: repoBp >= baseBp,
+    start: auto.value.toFixed(2),
+  };
+}
+
+// 콜금리 타일 아래에 산출 근거를 보여준다.
+function callCalcHtml(eff) {
+  const auto = eff ? CALL_START[eff] : null;
+  if (!auto) return "";
+  const c = callBreakdown(auto);
+  return `<div class="call-calc">
+      <div class="${c.repoWins ? "" : "win"}">${c.baseText}</div>
+      <div class="${c.repoWins ? "win" : ""}">${c.repoText}</div>
+      <div>둘 중 큰 값 = 콜시작금리 <b>${c.start}</b>, +10bp = <b>${fmtValue(addDec(auto.value, SHEET_RULES.callAdd))}</b></div>
+    </div>`;
+}
+
 function renderTiles(container, dayRecord, dateStr) {
   container.innerHTML = "";
   if (!dayRecord) return;
@@ -435,6 +466,7 @@ function renderTiles(container, dayRecord, dateStr) {
         ${isBad ? "" : deltaHtml(dateStr, m, val)}
       </div>
       ${isBad ? "" : rawValueHtml(val)}
+      ${m === "call_rate" && !isBad ? callCalcHtml(eff) : ""}
       <div class="eff">${eff ? "기준일 " + eff : ""}${dayRecord.backfilled ? " · 주말백필" : ""}</div>
     `;
     container.appendChild(tile);
@@ -879,20 +911,20 @@ function sheetCellCss(i, red) {
   return css;
 }
 
-// 엑셀에 서식 있는 표로 붙여넣을 HTML. 수식 칸은 x:fmla 속성과 텍스트("=...")를 같이 실어 둔다.
+// 엑셀에 서식 있는 표로 붙여넣을 HTML. 수식 칸은 셀 글자("=C1416+$D$2")로만 싣는다.
+// 엑셀 전용 x:fmla 속성이나 엑셀 네임스페이스(xmlns:x)를 쓰면 안 된다: 엑셀이 그 수식을 "1행에서 복사해 온
+// 수식"으로 보고 붙여넣는 행만큼 참조를 통째로 밀어버린다 (1416행에 붙이면 =C1416+$D$2 가
+// =C2831+$D$1417 로 바뀜). 일반 웹 표로 싣고 엑셀이 글자를 직접 입력한 것처럼 해석하게 한다.
 function buildSheetHtml(built, flags) {
   const rowsHtml = built
     .map(
       (b, ri) =>
         `<tr>${b.cells
-          .map((c, ci) => {
-            const fmla = c.startsWith("=") ? ` x:fmla='${escHtml(c)}'` : "";
-            return `<td${fmla} style='${sheetCellCss(ci, flags[ri][ci] && c !== "")}'>${escHtml(c)}</td>`;
-          })
+          .map((c, ci) => `<td style='${sheetCellCss(ci, flags[ri][ci] && c !== "")}'>${escHtml(c)}</td>`)
           .join("")}</tr>`
     )
     .join("");
-  return `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8"></head><body><table>${rowsHtml}</table></body></html>`;
+  return `<html><head><meta charset="utf-8"></head><body><table>${rowsHtml}</table></body></html>`;
 }
 
 // 월요일 레코드는 시트에 토·일 행이 따로 있으므로, 옵션에 따라 토·일 행을 앞에 같이 붙인다.
@@ -1005,7 +1037,8 @@ function updateCopyPreview(el, dates) {
     const override = manual.call[key];
     const auto = CALL_START[key];
     const start = override !== undefined ? Number(override) : auto ? auto.value : null;
-    const autoText = auto ? `자동 ${auto.value.toFixed(2)} (레포 시작 ${auto.repo_low.toFixed(2)} · 기준금리 ${auto.base.toFixed(2)})` : "자동값 없음 (수집 전)";
+    const calc = auto ? callBreakdown(auto) : null;
+    const autoText = auto ? `자동 ${calc.start} = MAX(${calc.baseText}, ${calc.repoText})` : "자동값 없음 (수집 전)";
     span.textContent = `${autoText}${start === null ? "" : ` → 콜금리 ${fmtValue(addDec(start, SHEET_RULES.callAdd))}`}${override !== undefined ? " · 직접 입력값 사용" : ""}`;
   });
 }
@@ -1028,8 +1061,9 @@ async function copySheetRows(el, dates) {
   const missing = [...new Set(built.flatMap((b) => b.missing))];
   const where = rows ? ` (엑셀 ${rows[0]}${rows.length > 1 ? "~" + rows[rows.length - 1] : ""}행에 붙여넣기)` : " (행 번호가 없어 계산열을 수식이 아닌 값으로 복사)";
   const colorNote = rich ? (result === "rich" ? ` · 변경 ${redCount}칸 빨간 글자` : " · 서식 복사를 못 해 텍스트로만 복사됨") : "";
+  const checkNote = rows ? ` · 붙여넣은 뒤 101열(D${rows[0]})이 =C${rows[0]}+$D$2 로 보이면 정상` : "";
   msg.className = "copy-msg" + (missing.length || !rows || (rich && result !== "rich") ? " warn" : "");
-  msg.textContent = `✓ ${built.length}행 복사됨${where}${colorNote}` + (missing.length ? ` · 빈 칸: ${missing.join(", ")}` : "");
+  msg.textContent = `✓ ${built.length}행 복사됨${where}${colorNote}${checkNote}` + (missing.length ? ` · 빈 칸: ${missing.join(", ")}` : "");
 }
 
 // stateKey: "토·일 행 포함" 체크 같은 패널 상태를 호출한 곳(today/lookup)별로 따로 기억하기 위한 키
@@ -1074,7 +1108,7 @@ function renderCopyPanel(containerId, date, stateKey) {
         <span class="copy-msg"></span>
       </div>
       <div class="copy-manual">${inputs}</div>
-      <div class="copy-hint">엑셀에서 위 "붙여넣을 행"의 날짜(A열) 칸을 선택하고 붙여넣기 하세요. 콜금리(117)는 한국자금중개 일일 PDF에서 자동 수집한 콜시작금리(MAX(기준금리+3bp, 레포 시작금리+2bp))에 10bp를 더한 값이며, 입력칸에 직접 넣으면 그 값을 씁니다. 101·102·105·111~113은 시트와 같은 수식(예: =C${firstRow}+$D$2)으로 들어가므로 행 번호가 실제 위치와 맞는지 꼭 확인해주세요 (날짜로 자동 계산한 값이며, 고치면 기억합니다). "빨간 글자"를 켜면 전일 대비 바뀐 금리가 빨간색으로 붙고 시트와 같은 서식(맑은 고딕·0.00·테두리)도 함께 들어가며, 끄면 값과 수식만 붙여넣어 기존 서식을 그대로 둡니다. 미국 2년은 자동 수집이 안 되어 직접 입력하며, 입력값은 이 브라우저에 저장됩니다.</div>
+      <div class="copy-hint">엑셀에서 위 "붙여넣을 행"의 날짜(A열) 칸을 선택하고 붙여넣기 하세요. 콜금리(117)는 한국자금중개 일일 PDF에서 자동 수집한 콜시작금리(MAX(기준금리+3bp, 레포 시작금리+2bp))에 10bp를 더한 값이며, 입력칸에 직접 넣으면 그 값을 씁니다. 101·102·105·111~113은 시트와 같은 수식(예: =C${firstRow}+$D$2)으로 들어가므로 행 번호가 실제 위치와 맞는지 꼭 확인해주세요 (날짜로 자동 계산한 값이며, 고치면 기억합니다). 붙여넣은 수식이 다른 행(예: =C2831+…)을 가리키면 "빨간 글자" 체크를 끄고 다시 복사해주세요. "빨간 글자"를 켜면 전일 대비 바뀐 금리가 빨간색으로 붙고 시트와 같은 서식(맑은 고딕·0.00·테두리)도 함께 들어가며, 끄면 값과 수식만 붙여넣어 기존 서식을 그대로 둡니다. 미국 2년은 자동 수집이 안 되어 직접 입력하며, 입력값은 이 브라우저에 저장됩니다.</div>
       <details class="copy-preview" open>
         <summary>붙여넣기 미리보기 (실제로 복사되는 내용)</summary>
         <div class="table-scroll"><table><thead></thead><tbody></tbody></table></div>
