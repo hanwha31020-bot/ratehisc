@@ -43,11 +43,23 @@ jobs:
       - name: Run backfill script
         run: python scripts/backfill.py --days "${{ github.event.inputs.days || '22' }}"
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # 빠진 날짜의 콜시작금리도 같이 복구한다 (이미 저장된 날짜는 다시 받지 않는다)
+      - name: Fetch call start rate (KMB daily PDF)
+        continue-on-error: true
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund pdf-parse@1.1.1
+          node scripts/fetch_call_start.js
+
       - name: Commit and push if changed
         run: |
           git config user.name "rates-bot"
           git config user.email "rates-bot@users.noreply.github.com"
-          git add docs/data/history.json docs/data/history.xlsx
+          git add docs/data/history.json docs/data/history.xlsx docs/data/call_start.json
           if git diff --cached --quiet; then
             echo "변경 사항 없음"
           else

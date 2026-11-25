@@ -51,11 +51,24 @@ jobs:
       - name: Run fetch script
         run: python scripts/fetch_rates.py
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # 콜시작금리: 한국자금중개(KMB) 일일 시황 PDF에서 읽는다 (scripts/fetch_call_start.js).
+      # 실패해도 위의 금리 수집 결과는 그대로 커밋되도록 continue-on-error.
+      - name: Fetch call start rate (KMB daily PDF)
+        continue-on-error: true
+        run: |
+          npm install --no-save --no-package-lock --no-audit --no-fund pdf-parse@1.1.1
+          node scripts/fetch_call_start.js
+
       - name: Commit and push if changed
         run: |
           git config user.name "rates-bot"
           git config user.email "rates-bot@users.noreply.github.com"
-          git add docs/data/history.json docs/data/history.xlsx
+          git add docs/data/history.json docs/data/history.xlsx docs/data/call_start.json
           if git diff --cached --quiet; then
             echo "변경 사항 없음"
           else

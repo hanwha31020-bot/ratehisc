@@ -1,0 +1,1097 @@
+{
+  "source": "한국자금중개(KMB) 일일 원화자금 현황 PDF",
+  "days": {
+    "2026-04-07": {
+      "value": 2.53,
+      "repo_low": 2.46,
+      "repo_high": 2.46,
+      "base": 2.5,
+      "seq": 3270
+    },
+    "2026-04-08": {
+      "value": 2.53,
+      "repo_low": 2.46,
+      "repo_high": 2.46,
+      "base": 2.5,
+      "seq": 3271
+    },
+    "2026-04-09": {
+      "value": 2.53,
+      "repo_low": 2.49,
+      "repo_high": 2.58,
+      "base": 2.5,
+      "seq": 3272
+    },
+    "2026-04-10": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3273
+    },
+    "2026-04-13": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3274
+    },
+    "2026-04-14": {
+      "value": 2.53,
+      "repo_low": 2.5,
+      "repo_high": 2.5,
+      "base": 2.5,
+      "seq": 3275
+    },
+    "2026-04-15": {
+      "value": 2.53,
+      "repo_low": 2.48,
+      "repo_high": 2.48,
+      "base": 2.5,
+      "seq": 3276
+    },
+    "2026-04-16": {
+      "value": 2.53,
+      "repo_low": 2.47,
+      "repo_high": 2.47,
+      "base": 2.5,
+      "seq": 3277
+    },
+    "2026-04-17": {
+      "value": 2.53,
+      "repo_low": 2.5,
+      "repo_high": 2.5,
+      "base": 2.5,
+      "seq": 3278
+    },
+    "2026-04-20": {
+      "value": 2.53,
+      "repo_low": 2.51,
+      "repo_high": 2.51,
+      "base": 2.5,
+      "seq": 3280
+    },
+    "2026-04-21": {
+      "value": 2.53,
+      "repo_low": 2.51,
+      "repo_high": 2.51,
+      "base": 2.5,
+      "seq": 3281
+    },
+    "2026-04-22": {
+      "value": 2.53,
+      "repo_low": 2.51,
+      "repo_high": 2.51,
+      "base": 2.5,
+      "seq": 3282
+    },
+    "2026-04-23": {
+      "value": 2.53,
+      "repo_low": 2.51,
+      "repo_high": 2.51,
+      "base": 2.5,
+      "seq": 3283
+    },
+    "2026-04-24": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3284
+    },
+    "2026-04-27": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3285
+    },
+    "2026-04-28": {
+      "value": 2.53,
+      "repo_low": 2.51,
+      "repo_high": 2.51,
+      "base": 2.5,
+      "seq": 3286
+    },
+    "2026-04-29": {
+      "value": 2.53,
+      "repo_low": 2.5,
+      "repo_high": 2.5,
+      "base": 2.5,
+      "seq": 3287
+    },
+    "2026-04-30": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3288
+    },
+    "2026-05-04": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3289
+    },
+    "2026-05-06": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3290
+    },
+    "2026-05-07": {
+      "value": 2.54,
+      "repo_low": 2.52,
+      "repo_high": 2.52,
+      "base": 2.5,
+      "seq": 3291
+    },
+    "2026-05-08": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3292
+    },
+    "2026-05-11": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3293
+    },
+    "2026-05-12": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3294
+    },
+    "2026-05-13": {
+      "value": 2.53,
+      "repo_low": 2.51,
+      "repo_high": 2.51,
+      "base": 2.5,
+      "seq": 3295
+    },
+    "2026-05-14": {
+      "value": 2.53,
+      "repo_low": 2.51,
+      "repo_high": 2.51,
+      "base": 2.5,
+      "seq": 3296
+    },
+    "2026-05-15": {
+      "value": 2.53,
+      "repo_low": 2.51,
+      "repo_high": 2.51,
+      "base": 2.5,
+      "seq": 3297
+    },
+    "2026-05-18": {
+      "value": 2.53,
+      "repo_low": 2.5,
+      "repo_high": 2.5,
+      "base": 2.5,
+      "seq": 3298
+    },
+    "2026-05-19": {
+      "value": 2.53,
+      "repo_low": 2.5,
+      "repo_high": 2.5,
+      "base": 2.5,
+      "seq": 3299
+    },
+    "2026-05-20": {
+      "value": 2.53,
+      "repo_low": 2.5,
+      "repo_high": 2.5,
+      "base": 2.5,
+      "seq": 3300
+    },
+    "2026-05-21": {
+      "value": 2.53,
+      "repo_low": 2.51,
+      "repo_high": 2.51,
+      "base": 2.5,
+      "seq": 3301
+    },
+    "2026-05-22": {
+      "value": 2.54,
+      "repo_low": 2.52,
+      "repo_high": 2.52,
+      "base": 2.5,
+      "seq": 3302
+    },
+    "2026-05-26": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3303
+    },
+    "2026-05-27": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3304
+    },
+    "2026-05-28": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3305
+    },
+    "2026-05-29": {
+      "value": 2.57,
+      "repo_low": 2.55,
+      "repo_high": 2.55,
+      "base": 2.5,
+      "seq": 3306
+    },
+    "2026-06-01": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3307
+    },
+    "2026-06-02": {
+      "value": 2.54,
+      "repo_low": 2.52,
+      "repo_high": 2.52,
+      "base": 2.5,
+      "seq": 3308
+    },
+    "2026-06-04": {
+      "value": 2.53,
+      "repo_low": 2.51,
+      "repo_high": 2.51,
+      "base": 2.5,
+      "seq": 3309
+    },
+    "2026-06-05": {
+      "value": 2.53,
+      "repo_low": 2.5,
+      "repo_high": 2.5,
+      "base": 2.5,
+      "seq": 3310
+    },
+    "2026-06-08": {
+      "value": 2.53,
+      "repo_low": 2.5,
+      "repo_high": 2.5,
+      "base": 2.5,
+      "seq": 3311
+    },
+    "2026-06-09": {
+      "value": 2.57,
+      "repo_low": 2.55,
+      "repo_high": 2.55,
+      "base": 2.5,
+      "seq": 3312
+    },
+    "2026-06-10": {
+      "value": 2.57,
+      "repo_low": 2.55,
+      "repo_high": 2.55,
+      "base": 2.5,
+      "seq": 3313
+    },
+    "2026-06-11": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3314
+    },
+    "2026-06-12": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3315
+    },
+    "2026-06-15": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3316
+    },
+    "2026-06-16": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3317
+    },
+    "2026-06-17": {
+      "value": 2.54,
+      "repo_low": 2.52,
+      "repo_high": 2.52,
+      "base": 2.5,
+      "seq": 3318
+    },
+    "2026-06-18": {
+      "value": 2.54,
+      "repo_low": 2.52,
+      "repo_high": 2.52,
+      "base": 2.5,
+      "seq": 3319
+    },
+    "2026-06-19": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3320
+    },
+    "2026-06-22": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3321
+    },
+    "2026-06-23": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3322
+    },
+    "2026-06-24": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3323
+    },
+    "2026-06-25": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3324
+    },
+    "2026-06-26": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3325
+    },
+    "2026-06-29": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3326
+    },
+    "2026-06-30": {
+      "value": 2.6,
+      "repo_low": 2.58,
+      "repo_high": 3.1,
+      "base": 2.5,
+      "seq": 3327
+    },
+    "2026-07-01": {
+      "value": 2.55,
+      "repo_low": 2.53,
+      "repo_high": 2.53,
+      "base": 2.5,
+      "seq": 3328
+    },
+    "2026-07-02": {
+      "value": 2.53,
+      "repo_low": 2.5,
+      "repo_high": 2.5,
+      "base": 2.5,
+      "seq": 3329
+    },
+    "2026-07-03": {
+      "value": 2.53,
+      "repo_low": 2.45,
+      "repo_high": 2.45,
+      "base": 2.5,
+      "seq": 3330
+    },
+    "2026-07-06": {
+      "value": 2.53,
+      "repo_low": 2.45,
+      "repo_high": 2.45,
+      "base": 2.5,
+      "seq": 3331
+    },
+    "2026-07-07": {
+      "value": 2.53,
+      "repo_low": 2.45,
+      "repo_high": 2.45,
+      "base": 2.5,
+      "seq": 3332
+    },
+    "2026-07-08": {
+      "value": 2.53,
+      "repo_low": 2.45,
+      "repo_high": 2.45,
+      "base": 2.5,
+      "seq": 3333
+    },
+    "2026-07-09": {
+      "value": 2.53,
+      "repo_low": 2.49,
+      "repo_high": 2.49,
+      "base": 2.5,
+      "seq": 3334
+    },
+    "2026-07-10": {
+      "value": 2.54,
+      "repo_low": 2.52,
+      "repo_high": 2.75,
+      "base": 2.5,
+      "seq": 3335
+    },
+    "2026-07-13": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.65,
+      "base": 2.5,
+      "seq": 3336
+    },
+    "2026-07-14": {
+      "value": 2.57,
+      "repo_low": 2.55,
+      "repo_high": 2.7,
+      "base": 2.5,
+      "seq": 3337
+    },
+    "2026-07-15": {
+      "value": 2.56,
+      "repo_low": 2.54,
+      "repo_high": 2.54,
+      "base": 2.5,
+      "seq": 3338
+    },
+    "2026-07-16": {
+      "value": 2.78,
+      "repo_low": 2.75,
+      "repo_high": 2.75,
+      "base": 2.75,
+      "seq": 3339
+    },
+    "2026-07-20": {
+      "value": 2.78,
+      "repo_low": 2.7,
+      "repo_high": 2.7,
+      "base": 2.75,
+      "seq": 3340
+    },
+    "2026-07-21": {
+      "value": 2.78,
+      "repo_low": 2.45,
+      "repo_high": 2.73,
+      "base": 2.75,
+      "seq": 3341
+    },
+    "2026-07-22": {
+      "value": 2.78,
+      "repo_low": 2.4,
+      "repo_high": 2.71,
+      "base": 2.75,
+      "seq": 3342
+    },
+    "2026-07-23": {
+      "value": 2.78,
+      "repo_low": 2.35,
+      "repo_high": 2.7,
+      "base": 2.75,
+      "seq": 3343
+    },
+    "2026-07-24": {
+      "value": 2.78,
+      "repo_low": 2.5,
+      "repo_high": 2.7,
+      "base": 2.75,
+      "seq": 3344
+    },
+    "2026-07-27": {
+      "value": 2.78,
+      "repo_low": 2.35,
+      "repo_high": 2.71,
+      "base": 2.75,
+      "seq": 3345
+    },
+    "2026-07-28": {
+      "value": 2.78,
+      "repo_low": 2.35,
+      "repo_high": 2.72,
+      "base": 2.75,
+      "seq": 3346
+    },
+    "2026-07-29": {
+      "value": 2.78,
+      "repo_low": 2.35,
+      "repo_high": 2.71,
+      "base": 2.75,
+      "seq": 3347
+    },
+    "2026-07-30": {
+      "value": 2.78,
+      "repo_low": 2.72,
+      "repo_high": 2.95,
+      "base": 2.75,
+      "seq": 3348
+    },
+    "2026-07-31": {
+      "value": 2.79,
+      "repo_low": 2.77,
+      "repo_high": 2.9,
+      "base": 2.75,
+      "seq": 3349
+    },
+    "2026-08-03": {
+      "value": 2.79,
+      "repo_low": 2.77,
+      "repo_high": 2.9,
+      "base": 2.75,
+      "seq": 3350
+    },
+    "2026-08-04": {
+      "value": 2.78,
+      "repo_low": 2.76,
+      "repo_high": 2.76,
+      "base": 2.75,
+      "seq": 3351
+    },
+    "2026-08-05": {
+      "value": 2.78,
+      "repo_low": 2.76,
+      "repo_high": 2.76,
+      "base": 2.75,
+      "seq": 3352
+    },
+    "2026-08-06": {
+      "value": 2.78,
+      "repo_low": 2.75,
+      "repo_high": 2.75,
+      "base": 2.75,
+      "seq": 3353
+    },
+    "2026-08-07": {
+      "value": 2.78,
+      "repo_low": 2.73,
+      "repo_high": 2.73,
+      "base": 2.75,
+      "seq": 3354
+    },
+    "2026-08-10": {
+      "value": 2.78,
+      "repo_low": 2.76,
+      "repo_high": 2.76,
+      "base": 2.75,
+      "seq": 3355
+    },
+    "2026-08-11": {
+      "value": 2.78,
+      "repo_low": 2.76,
+      "repo_high": 2.85,
+      "base": 2.75,
+      "seq": 3356
+    },
+    "2026-08-12": {
+      "value": 2.79,
+      "repo_low": 2.77,
+      "repo_high": 2.83,
+      "base": 2.75,
+      "seq": 3357
+    },
+    "2026-08-13": {
+      "value": 2.78,
+      "repo_low": 2.76,
+      "repo_high": 2.76,
+      "base": 2.75,
+      "seq": 3358
+    },
+    "2026-08-14": {
+      "value": 2.78,
+      "repo_low": 2.74,
+      "repo_high": 2.74,
+      "base": 2.75,
+      "seq": 3359
+    },
+    "2026-08-18": {
+      "value": 2.78,
+      "repo_low": 2.73,
+      "repo_high": 2.73,
+      "base": 2.75,
+      "seq": 3360
+    },
+    "2026-08-19": {
+      "value": 2.78,
+      "repo_low": 2.73,
+      "repo_high": 2.73,
+      "base": 2.75,
+      "seq": 3361
+    },
+    "2026-08-20": {
+      "value": 2.78,
+      "repo_low": 2.72,
+      "repo_high": 2.72,
+      "base": 2.75,
+      "seq": 3362
+    },
+    "2026-08-21": {
+      "value": 2.78,
+      "repo_low": 2.72,
+      "repo_high": 2.72,
+      "base": 2.75,
+      "seq": 3363
+    },
+    "2026-08-24": {
+      "value": 2.78,
+      "repo_low": 2.73,
+      "repo_high": 2.73,
+      "base": 2.75,
+      "seq": 3364
+    },
+    "2026-08-25": {
+      "value": 2.78,
+      "repo_low": 2.73,
+      "repo_high": 2.73,
+      "base": 2.75,
+      "seq": 3365
+    },
+    "2026-08-26": {
+      "value": 2.78,
+      "repo_low": 2.73,
+      "repo_high": 2.73,
+      "base": 2.75,
+      "seq": 3366
+    },
+    "2026-08-27": {
+      "value": 3.03,
+      "repo_low": 2.98,
+      "repo_high": 2.98,
+      "base": 3,
+      "seq": 3367
+    },
+    "2026-08-28": {
+      "value": 3.03,
+      "repo_low": 2.98,
+      "repo_high": 2.98,
+      "base": 3,
+      "seq": 3368
+    },
+    "2026-08-31": {
+      "value": 3.07,
+      "repo_low": 3.05,
+      "repo_high": 3.05,
+      "base": 3,
+      "seq": 3369
+    },
+    "2026-09-01": {
+      "value": 3.06,
+      "repo_low": 3.04,
+      "repo_high": 3.1,
+      "base": 3,
+      "seq": 3370
+    },
+    "2026-09-02": {
+      "value": 3.03,
+      "repo_low": 2.98,
+      "repo_high": 2.98,
+      "base": 3,
+      "seq": 3371
+    },
+    "2026-09-03": {
+      "value": 3.03,
+      "repo_low": 2.95,
+      "repo_high": 2.95,
+      "base": 3,
+      "seq": 3372
+    },
+    "2026-09-04": {
+      "value": 3.03,
+      "repo_low": 2.95,
+      "repo_high": 2.95,
+      "base": 3,
+      "seq": 3373
+    },
+    "2026-09-07": {
+      "value": 3.03,
+      "repo_low": 2.98,
+      "repo_high": 2.98,
+      "base": 3,
+      "seq": 3374
+    },
+    "2026-09-08": {
+      "value": 3.08,
+      "repo_low": 3.06,
+      "repo_high": 3.16,
+      "base": 3,
+      "seq": 3375
+    },
+    "2026-09-09": {
+      "value": 3.08,
+      "repo_low": 3.06,
+      "repo_high": 3.06,
+      "base": 3,
+      "seq": 3376
+    },
+    "2026-09-10": {
+      "value": 3.08,
+      "repo_low": 3.06,
+      "repo_high": 3.11,
+      "base": 3,
+      "seq": 3377
+    },
+    "2026-09-11": {
+      "value": 3.08,
+      "repo_low": 3.06,
+      "repo_high": 3.11,
+      "base": 3,
+      "seq": 3378
+    },
+    "2026-09-14": {
+      "value": 3.07,
+      "repo_low": 3.05,
+      "repo_high": 3.05,
+      "base": 3,
+      "seq": 3379
+    },
+    "2026-09-15": {
+      "value": 3.06,
+      "repo_low": 3.04,
+      "repo_high": 3.04,
+      "base": 3,
+      "seq": 3380
+    },
+    "2026-09-16": {
+      "value": 3.04,
+      "repo_low": 3.02,
+      "repo_high": 3.02,
+      "base": 3,
+      "seq": 3381
+    },
+    "2026-09-17": {
+      "value": 3.04,
+      "repo_low": 3.02,
+      "repo_high": 3.02,
+      "base": 3,
+      "seq": 3382
+    },
+    "2026-09-18": {
+      "value": 3.06,
+      "repo_low": 3.04,
+      "repo_high": 3.14,
+      "base": 3,
+      "seq": 3383
+    },
+    "2026-09-21": {
+      "value": 3.07,
+      "repo_low": 3.05,
+      "repo_high": 3.15,
+      "base": 3,
+      "seq": 3384
+    },
+    "2026-09-22": {
+      "value": 3.08,
+      "repo_low": 3.06,
+      "repo_high": 3.1,
+      "base": 3,
+      "seq": 3385
+    },
+    "2026-09-23": {
+      "value": 3.08,
+      "repo_low": 3.06,
+      "repo_high": 3.1,
+      "base": 3,
+      "seq": 3386
+    },
+    "2026-09-28": {
+      "value": 3.08,
+      "repo_low": 3.06,
+      "repo_high": 3.1,
+      "base": 3,
+      "seq": 3387
+    },
+    "2026-09-29": {
+      "value": 3.08,
+      "repo_low": 3.06,
+      "repo_high": 3.11,
+      "base": 3,
+      "seq": 3388
+    },
+    "2026-09-30": {
+      "value": 3.11,
+      "repo_low": 3.09,
+      "repo_high": 3.15,
+      "base": 3,
+      "seq": 3389
+    },
+    "2026-10-01": {
+      "value": 3.09,
+      "repo_low": 3.07,
+      "repo_high": 3.12,
+      "base": 3,
+      "seq": 3390
+    },
+    "2026-10-02": {
+      "value": 3.03,
+      "repo_low": 2.95,
+      "repo_high": 2.95,
+      "base": 3,
+      "seq": 3391
+    },
+    "2026-10-06": {
+      "value": 3.03,
+      "repo_low": 2.95,
+      "repo_high": 2.95,
+      "base": 3,
+      "seq": 3392
+    },
+    "2026-10-07": {
+      "value": 3.03,
+      "repo_low": 2.95,
+      "repo_high": 2.95,
+      "base": 3,
+      "seq": 3393
+    },
+    "2026-10-08": {
+      "value": 3.03,
+      "repo_low": 3.01,
+      "repo_high": 3.01,
+      "base": 3,
+      "seq": 3394
+    },
+    "2026-10-12": {
+      "value": 3.05,
+      "repo_low": 3.03,
+      "repo_high": 3.07,
+      "base": 3,
+      "seq": 3395
+    },
+    "2026-10-13": {
+      "value": 3.07,
+      "repo_low": 3.05,
+      "repo_high": 3.08,
+      "base": 3,
+      "seq": 3396
+    },
+    "2026-10-14": {
+      "value": 3.05,
+      "repo_low": 3.03,
+      "repo_high": 3.03,
+      "base": 3,
+      "seq": 3397
+    },
+    "2026-10-15": {
+      "value": 3.06,
+      "repo_low": 3.04,
+      "repo_high": 3.04,
+      "base": 3,
+      "seq": 3398
+    },
+    "2026-10-16": {
+      "value": 3.06,
+      "repo_low": 3.04,
+      "repo_high": 3.04,
+      "base": 3,
+      "seq": 3400
+    },
+    "2026-10-19": {
+      "value": 3.06,
+      "repo_low": 3.04,
+      "repo_high": 3.04,
+      "base": 3,
+      "seq": 3401
+    },
+    "2026-10-20": {
+      "value": 3.04,
+      "repo_low": 3.02,
+      "repo_high": 3.02,
+      "base": 3,
+      "seq": 3402
+    },
+    "2026-10-21": {
+      "value": 3.05,
+      "repo_low": 3.03,
+      "repo_high": 3.03,
+      "base": 3,
+      "seq": 3403
+    },
+    "2026-10-22": {
+      "value": 3.05,
+      "repo_low": 3.03,
+      "repo_high": 3.03,
+      "base": 3,
+      "seq": 3404
+    },
+    "2026-10-23": {
+      "value": 3.07,
+      "repo_low": 3.05,
+      "repo_high": 3.05,
+      "base": 3,
+      "seq": 3406
+    },
+    "2026-10-26": {
+      "value": 3.07,
+      "repo_low": 3.05,
+      "repo_high": 3.05,
+      "base": 3,
+      "seq": 3407
+    },
+    "2026-10-27": {
+      "value": 3.04,
+      "repo_low": 3.02,
+      "repo_high": 3.02,
+      "base": 3,
+      "seq": 3408
+    },
+    "2026-10-28": {
+      "value": 3.03,
+      "repo_low": 2.95,
+      "repo_high": 2.95,
+      "base": 3,
+      "seq": 3409
+    },
+    "2026-10-29": {
+      "value": 3.03,
+      "repo_low": 2.96,
+      "repo_high": 2.96,
+      "base": 3,
+      "seq": 3410
+    },
+    "2026-10-30": {
+      "value": 3.05,
+      "repo_low": 3.03,
+      "repo_high": 3.03,
+      "base": 3,
+      "seq": 3411
+    },
+    "2026-11-02": {
+      "value": 3.03,
+      "repo_low": 3,
+      "repo_high": 3,
+      "base": 3,
+      "seq": 3412
+    },
+    "2026-11-03": {
+      "value": 3.03,
+      "repo_low": 3,
+      "repo_high": 3,
+      "base": 3,
+      "seq": 3413
+    },
+    "2026-11-04": {
+      "value": 3.03,
+      "repo_low": 3,
+      "repo_high": 3,
+      "base": 3,
+      "seq": 3414
+    },
+    "2026-11-05": {
+      "value": 3.05,
+      "repo_low": 3.03,
+      "repo_high": 3.03,
+      "base": 3,
+      "seq": 3415
+    },
+    "2026-11-06": {
+      "value": 3.06,
+      "repo_low": 3.04,
+      "repo_high": 3.04,
+      "base": 3,
+      "seq": 3416
+    },
+    "2026-11-09": {
+      "value": 3.05,
+      "repo_low": 3.03,
+      "repo_high": 3.03,
+      "base": 3,
+      "seq": 3417
+    },
+    "2026-11-10": {
+      "value": 3.05,
+      "repo_low": 3.03,
+      "repo_high": 3.03,
+      "base": 3,
+      "seq": 3418
+    },
+    "2026-11-11": {
+      "value": 3.05,
+      "repo_low": 3.03,
+      "repo_high": 3.03,
+      "base": 3,
+      "seq": 3419
+    },
+    "2026-11-12": {
+      "value": 3.07,
+      "repo_low": 3.05,
+      "repo_high": 3.05,
+      "base": 3,
+      "seq": 3420
+    },
+    "2026-11-13": {
+      "value": 3.09,
+      "repo_low": 3.07,
+      "repo_high": 3.07,
+      "base": 3,
+      "seq": 3421
+    },
+    "2026-11-16": {
+      "value": 3.08,
+      "repo_low": 3.06,
+      "repo_high": 3.06,
+      "base": 3,
+      "seq": 3422
+    },
+    "2026-11-17": {
+      "value": 3.09,
+      "repo_low": 3.07,
+      "repo_high": 3.07,
+      "base": 3,
+      "seq": 3423
+    },
+    "2026-11-18": {
+      "value": 3.07,
+      "repo_low": 3.05,
+      "repo_high": 3.05,
+      "base": 3,
+      "seq": 3424
+    },
+    "2026-11-19": {
+      "value": 3.07,
+      "repo_low": 3.05,
+      "repo_high": 3.05,
+      "base": 3,
+      "seq": 3425
+    },
+    "2026-11-20": {
+      "value": 3.09,
+      "repo_low": 3.07,
+      "repo_high": 3.07,
+      "base": 3,
+      "seq": 3426
+    },
+    "2026-11-23": {
+      "value": 3.11,
+      "repo_low": 3.09,
+      "repo_high": 3.09,
+      "base": 3,
+      "seq": 3427
+    },
+    "2026-11-24": {
+      "value": 3.11,
+      "repo_low": 3.09,
+      "repo_high": 3.09,
+      "base": 3,
+      "seq": 3428
+    }
+  }
+}
