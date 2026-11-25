@@ -186,6 +186,40 @@
   .source-links li { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
   .source-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
   .source-links a:hover { text-decoration: underline; }
+  .title-btn { margin-left: auto; padding: 5px 12px; font-size: 12.5px; }
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 100; background: rgba(15, 23, 42, 0.45);
+    display: flex; align-items: flex-start; justify-content: center; padding: 5vh 16px; overflow-y: auto;
+  }
+  .modal-backdrop[hidden] { display: none; }
+  .modal {
+    width: 100%; max-width: 1180px; background: var(--card-bg); border-radius: var(--radius);
+    padding: 20px 24px 24px; box-shadow: 0 10px 40px rgba(15, 23, 42, 0.25);
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+  .modal-head h3 { margin: 0; font-size: 16px; }
+  .modal-head h3 span { font-weight: 400; color: var(--text-muted); font-size: 13px; }
+  .modal-close { background: none; color: var(--text-muted); font-size: 26px; line-height: 1; padding: 0 6px; }
+  .modal .copy-panel { margin-top: 0; }
+  .copy-panel { margin-top: 14px; padding: 12px 14px; background: #fafbfc; border: 1px solid var(--border); border-radius: 10px; }
+  .copy-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+  .copy-msg { font-size: 12.5px; color: var(--ok); }
+  .copy-msg.warn { color: var(--warn); }
+  .copy-manual { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 10px; }
+  .copy-manual label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .copy-manual input { width: 92px; padding: 5px 8px; font-size: 13px; }
+  .copy-head input.row-input { width: 78px; padding: 5px 8px; font-size: 13px; }
+  .copy-manual a { font-size: 12px; color: var(--accent); text-decoration: none; }
+  .copy-manual a:hover { text-decoration: underline; }
+  .copy-manual small { color: var(--text-muted); }
+  .copy-manual .call-out { color: var(--text-muted); font-size: 12px; min-width: 90px; }
+  .copy-hint { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
+  .copy-preview { margin-top: 10px; font-size: 12px; }
+  .copy-preview summary { cursor: pointer; color: var(--text-muted); }
+  .copy-preview table { font-size: 12px; }
+  .copy-preview th, .copy-preview td { padding: 3px 6px; }
+  .copy-preview td.blank { background: #fef3c7; }
+  .copy-preview .f { font-size: 10.5px; color: var(--text-muted); }
 </style>
 </head>
 <body>
@@ -206,7 +240,9 @@
   </header>
 
   <div class="card">
-    <h2>오늘 기준 금리 <span id="todayDateLabel" style="font-weight:400;color:var(--text-muted);"></span></h2>
+    <h2>오늘 기준 금리 <span id="todayDateLabel" style="font-weight:400;color:var(--text-muted);"></span>
+      <button type="button" class="title-btn" onclick="openCopyModal('today')">클립보드 복사하기</button>
+    </h2>
     <div class="grid" id="todayGrid"></div>
     <div class="legend">
       <span><i style="background:var(--changed-bg);border:1px solid var(--changed-border);"></i> 전일 대비 변동 있음</span>
@@ -225,7 +261,9 @@
   </div>
 
   <div class="card">
-    <h2>날짜별 조회</h2>
+    <h2>날짜별 조회
+      <button type="button" class="title-btn" onclick="openCopyModal('lookup')">클립보드 복사하기</button>
+    </h2>
     <div class="row">
       <label for="lookupDate">날짜</label>
       <input type="date" id="lookupDate" />
@@ -283,6 +321,16 @@
   </div>
 
   <footer>매일 한국시간 오전 7시에 자동 수집됩니다.</footer>
+</div>
+
+<div class="modal-backdrop" id="copyModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="copyModalTitle">
+    <div class="modal-head">
+      <h3 id="copyModalTitle">엑셀용 클립보드 복사 <span id="copyModalDate"></span></h3>
+      <button type="button" class="modal-close" onclick="closeCopyModal()" aria-label="닫기">&times;</button>
+    </div>
+    <div id="copyModalBody"></div>
+  </div>
 </div>
 
 <script>
@@ -576,6 +624,338 @@ function downloadRangeCsv() {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+// ===== 엑셀(금리정보.xlsx) 붙여넣기용 행 만들기 =====
+// 시트 규칙: 101=한국은행+1.7, 102=한국은행+2.7, 105=101+10, 111/112/113=CP(3개월)+0.2/0.4/0.7,
+// 117(콜금리)=콜시작금리+0.10. 콜시작금리와 미국2년(investing.com)은 자동 수집이 안 되어 직접 입력한다.
+const SHEET_RULES = { base1: 1.7, base2: 2.7, fixedAdd: 10, a1cp: [0.2, 0.4, 0.7], callAdd: 0.1 };
+const SHEET_COLUMNS = [
+  [null, "날짜"], [null, "요일"], [100, "한국은행"], [101, "기본금리_1"], [102, "기본금리_2"],
+  [103, "CD(3월)"], [104, "CP(3월)"], [105, "고정금리"], [106, "CP(1월)"],
+  [111, "별도금리_1"], [112, "별도금리_2"], [113, "별도금리_3"],
+  [114, "AA-(1Y)"], [115, "AA-(2Y)"], [116, "AA-(3Y)"], [117, "콜금리"], [118, "SOFR"], [119, "미국2년"],
+];
+const MANUAL_KEY = "rateSheetManualInputs";
+const copyPanelState = {};
+
+// 저장소(localStorage)를 못 쓰는 환경(시크릿 창 등)에서도 이 세션 동안은 입력값이 유지되도록
+// 메모리에 둔 사본을 기준으로 쓰고, 저장은 가능할 때만 한다.
+let manualCache = null;
+// 시트는 달력 기준 하루가 한 행이라(2024-09-19 이후 누락 없음), 기준 행 하나만 알면 날짜로 행 번호를 계산한다.
+const DEFAULT_ROW_ANCHOR = { date: "2026-11-23", row: 1415 };
+
+function loadManual() {
+  if (manualCache === null) {
+    let m = {};
+    try {
+      m = JSON.parse(localStorage.getItem(MANUAL_KEY) || "{}");
+    } catch (e) {}
+    const a = m.anchor;
+    manualCache = {
+      call: m.call || {},
+      us2y: m.us2y || {},
+      anchor: a && typeof a.date === "string" && Number.isInteger(a.row) ? a : { ...DEFAULT_ROW_ANCHOR },
+    };
+  }
+  return manualCache;
+}
+
+function dayDiff(a, b) {
+  return Math.round((Date.parse(b + "T00:00:00Z") - Date.parse(a + "T00:00:00Z")) / 86400000);
+}
+
+function sheetRowFor(date, anchor) {
+  return anchor.row + dayDiff(anchor.date, date);
+}
+
+function saveManual() {
+  try {
+    localStorage.setItem(MANUAL_KEY, JSON.stringify(manualCache));
+  } catch (e) {}
+}
+
+function dowOf(dateStr) {
+  return new Date(dateStr + "T00:00:00Z").getUTCDay();
+}
+
+function dowLabel(dateStr) {
+  return ["일", "월", "화", "수", "목", "금", "토"][dowOf(dateStr)];
+}
+
+function shiftDate(dateStr, days) {
+  return new Date(Date.parse(dateStr + "T00:00:00Z") + days * 86400000).toISOString().slice(0, 10);
+}
+
+function prevBizDate(dateStr) {
+  let d = shiftDate(dateStr, -1);
+  while (dowOf(d) === 0 || dowOf(d) === 6) d = shiftDate(d, -1);
+  return d;
+}
+
+// 소수 연산 오차(3.38+0.2=3.5800000000000001 등)를 없애기 위해 소수 6자리로 정리한다.
+function addDec(a, b) {
+  return Math.round((a + b) * 1e6) / 1e6;
+}
+
+function okValue(rec, metric) {
+  const v = rec && rec.values ? rec.values[metric] : null;
+  const s = rec && rec.status ? rec.status[metric] : null;
+  return s === "ok" && v !== null && v !== undefined ? Number(v) : null;
+}
+
+// 수동 입력값을 저장하는 기준일. 같은 기준일을 쓰는 행은 한 번만 입력하면 되도록 시트 규칙에 맞춘다 -
+// 콜시작금리: 국내 규칙(토·일은 금요일 값, 휴일은 전일 값) = CD의 기준일
+// 미국 2년: SOFR와 같은 규칙(직전 평일의 마감값, 토·일·월은 금요일 값). 미국 휴일에도 investing.com이
+//   값을 내는 날이 있어서(2026-11-11) SOFR 기준일이 아니라 단순히 직전 평일로 잡아야 시트와 맞는다.
+function manualKeys(date) {
+  const rec = HISTORY.days[date] || {};
+  const eff = rec.effective_date || {};
+  return { call: eff.cd91 || date, us2y: prevBizDate(date) };
+}
+
+// row(엑셀 행 번호)를 주면 계산열(101·102·105·111~113)을 시트와 같은 수식(=C1416+$D$2 등)으로 만든다.
+// row를 생략하면 같은 열을 계산된 값으로 채운다.
+function buildSheetRow(date, manual, row) {
+  const rec = HISTORY.days[date];
+  const keys = manualKeys(date);
+  const r = SHEET_RULES;
+  const missing = [];
+  const reasonOf = (m) => {
+    const s = rec.status ? rec.status[m] : "no_data";
+    return STATUS_LABEL[s] || s;
+  };
+  const val = (m, label) => {
+    const v = okValue(rec, m);
+    if (v === null) missing.push(`${label}(${reasonOf(m)})`);
+    return v;
+  };
+  const plus = (v, d) => (v === null ? null : addDec(v, d));
+
+  const bok = val("bok_base", "한국은행");
+  const cd = val("cd91", "CD");
+  const cp3 = val("cp3m", "CP3개월");
+  const cp1 = val("cp1m", "CP1개월");
+  const m1 = val("corp_aa_1y", "AA-1년");
+  const m2 = val("corp_aa_2y", "AA-2년");
+  const m3 = val("corp_aa_3y", "AA-3년");
+  const sofr = val("sofr", "SOFR");
+
+  const callRaw = manual.call[keys.call];
+  const callStart = callRaw === undefined ? null : Number(callRaw);
+  if (callStart === null) missing.push("콜금리(콜시작금리 미입력)");
+  const us2yRaw = manual.us2y[keys.us2y];
+  const us2y = us2yRaw === undefined ? null : Number(us2yRaw);
+  if (us2y === null) missing.push("미국2년(미입력)");
+
+  const useFormula = Number.isInteger(row) && row > 0;
+  const derived = (formula, value) => (useFormula ? (value === null ? null : formula) : value);
+  const base1 = plus(bok, r.base1);
+  const cells = [
+    date, dowLabel(date), bok,
+    derived(`=C${row}+$D$2`, base1),
+    derived(`=C${row}+$E$2`, plus(bok, r.base2)),
+    cd, cp3,
+    derived(`=D${row}+10`, plus(base1, r.fixedAdd)),
+    cp1,
+    derived(`=G${row}+$J$2`, plus(cp3, r.a1cp[0])),
+    derived(`=G${row}+$K$2`, plus(cp3, r.a1cp[1])),
+    derived(`=G${row}+$L$2`, plus(cp3, r.a1cp[2])),
+    m1, m2, m3, plus(callStart, r.callAdd), sofr, us2y,
+  ];
+  return { cells: cells.map((c) => (c === null || c === undefined ? "" : String(c))), missing };
+}
+
+// 월요일 레코드는 시트에 토·일 행이 따로 있으므로, 옵션에 따라 토·일 행을 앞에 같이 붙인다.
+function sheetDatesFor(date, includeWeekend) {
+  const dates = [];
+  if (includeWeekend && dowLabel(date) === "월") {
+    [shiftDate(date, -2), shiftDate(date, -1)].forEach((d) => {
+      if (HISTORY.days[d]) dates.push(d);
+    });
+  }
+  dates.push(date);
+  return dates;
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (e) {}
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+// 패널의 "붙여넣을 행" 입력값에서 각 날짜의 엑셀 행 번호를 계산한다 (하루 한 행). 입력이 비정상이면 null.
+function panelRows(el, dates) {
+  const input = el.querySelector(".row-input");
+  const first = input ? Number(input.value) : NaN;
+  if (!Number.isInteger(first) || first < 1) return null;
+  return dates.map((d) => first + dayDiff(dates[0], d));
+}
+
+function updateCopyPreview(el, dates) {
+  const staleMsg = el.querySelector(".copy-msg");
+  if (staleMsg) staleMsg.textContent = ""; // 입력이 바뀌면 직전 복사 결과 안내는 더 이상 맞지 않는다
+  const manual = loadManual();
+  const rows = panelRows(el, dates);
+  const built = dates.map((d, i) => buildSheetRow(d, manual, rows ? rows[i] : undefined));
+  // 수식으로 붙는 칸은 엑셀에서 보이게 될 계산값을 크게, 실제로 붙여넣어지는 수식을 작게 같이 보여준다.
+  const plain = dates.map((d) => buildSheetRow(d, manual, undefined));
+  el.querySelector("thead").innerHTML =
+    `<tr>${SHEET_COLUMNS.map(([code]) => `<th>${code === null ? "" : code}</th>`).join("")}</tr>` +
+    `<tr>${SHEET_COLUMNS.map(([, name]) => `<th>${name}</th>`).join("")}</tr>`;
+  el.querySelector("tbody").innerHTML = built
+    .map(
+      (b, ri) =>
+        `<tr>${b.cells
+          .map((c, ci) => {
+            const shown = plain[ri].cells[ci];
+            const isFormula = c !== shown && c.startsWith("=");
+            return `<td class="${shown === "" ? "blank" : ""}">${isFormula ? `${shown}<div class="f">${c}</div>` : c}</td>`;
+          })
+          .join("")}</tr>`
+    )
+    .join("");
+  el.querySelectorAll(".call-out").forEach((span) => {
+    const v = manual.call[span.dataset.key];
+    span.textContent = v === undefined ? "" : `→ 콜금리 ${addDec(Number(v), SHEET_RULES.callAdd)}`;
+  });
+}
+
+async function copySheetRows(el, dates) {
+  const manual = loadManual();
+  const rows = panelRows(el, dates);
+  const built = dates.map((d, i) => buildSheetRow(d, manual, rows ? rows[i] : undefined));
+  const text = built.map((b) => b.cells.join("\t")).join("\r\n");
+  const ok = await copyToClipboard(text);
+  const msg = el.querySelector(".copy-msg");
+  if (!ok) {
+    msg.className = "copy-msg warn";
+    msg.textContent = "복사에 실패했습니다. 브라우저의 클립보드 권한을 확인해주세요.";
+    return;
+  }
+  const missing = [...new Set(built.flatMap((b) => b.missing))];
+  const where = rows ? ` (엑셀 ${rows[0]}${rows.length > 1 ? "~" + rows[rows.length - 1] : ""}행에 붙여넣기)` : " (행 번호가 없어 계산열을 수식이 아닌 값으로 복사)";
+  msg.className = "copy-msg" + (missing.length || !rows ? " warn" : "");
+  msg.textContent = `✓ ${built.length}행 복사됨${where}` + (missing.length ? ` · 빈 칸: ${missing.join(", ")}` : "");
+}
+
+// stateKey: "토·일 행 포함" 체크 같은 패널 상태를 호출한 곳(today/lookup)별로 따로 기억하기 위한 키
+function renderCopyPanel(containerId, date, stateKey) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!date || !HISTORY.days[date]) {
+    el.innerHTML = "";
+    return;
+  }
+  const state = (copyPanelState[stateKey] = copyPanelState[stateKey] || { includeWeekend: true });
+  const isMonday = dowLabel(date) === "월";
+  const dates = sheetDatesFor(date, isMonday && state.includeWeekend);
+  const callKeys = [...new Set(dates.map((d) => manualKeys(d).call))];
+  const usKeys = [...new Set(dates.map((d) => manualKeys(d).us2y))];
+  const manual = loadManual();
+  const inputs = [
+    ...callKeys.map(
+      (k) => `<label>콜시작금리 <small>(${k} 기준)</small>
+        <input type="number" step="0.01" inputmode="decimal" data-kind="call" data-key="${k}" value="${manual.call[k] ?? ""}" />
+        <span class="call-out" data-key="${k}"></span></label>`
+    ),
+    ...usKeys.map(
+      (k) => `<label>미국 2년 <small>(investing.com ${k} 마감값)</small>
+        <input type="number" step="0.001" inputmode="decimal" data-kind="us2y" data-key="${k}" value="${manual.us2y[k] ?? ""}" />
+        <a href="https://kr.investing.com/rates-bonds/u.s.-2-year-bond-yield-historical-data" target="_blank" rel="noopener">사이트 열기</a></label>`
+    ),
+  ].join("");
+  const firstRow = sheetRowFor(dates[0], manual.anchor);
+
+  el.innerHTML = `
+    <div class="copy-panel">
+      <div class="copy-head">
+        <button type="button" class="copy-btn">엑셀용 복사</button>
+        <label>붙여넣을 행 <input type="number" min="1" step="1" class="row-input" value="${firstRow}" /></label>
+        ${isMonday ? `<label class="inc-wk"><input type="checkbox" ${state.includeWeekend ? "checked" : ""} /> 토·일 행 포함</label>` : ""}
+        <span class="copy-msg"></span>
+      </div>
+      <div class="copy-manual">${inputs}</div>
+      <div class="copy-hint">엑셀에서 위 "붙여넣을 행"의 날짜(A열) 칸을 선택하고 붙여넣기 하세요. 101·102·105·111~113은 시트와 같은 수식(예: =C${firstRow}+$D$2)으로 들어가므로 행 번호가 실제 위치와 맞는지 꼭 확인해주세요 (날짜로 자동 계산한 값이며, 고치면 기억합니다). 콜시작금리와 미국 2년은 자동 수집이 안 되어 직접 입력하며, 입력값은 이 브라우저에 저장됩니다.</div>
+      <details class="copy-preview" open>
+        <summary>붙여넣기 미리보기 (실제로 복사되는 내용)</summary>
+        <div class="table-scroll"><table><thead></thead><tbody></tbody></table></div>
+      </details>
+    </div>`;
+
+  el.querySelectorAll(".copy-manual input").forEach((inp) => {
+    inp.addEventListener("input", () => {
+      const m = loadManual();
+      const v = inp.value.trim();
+      if (v === "" || Number.isNaN(Number(v))) delete m[inp.dataset.kind][inp.dataset.key];
+      else m[inp.dataset.kind][inp.dataset.key] = Number(v);
+      saveManual();
+      updateCopyPreview(el, dates);
+    });
+  });
+  el.querySelector(".row-input").addEventListener("input", (e) => {
+    const n = Number(e.target.value);
+    if (Number.isInteger(n) && n >= 1) {
+      loadManual().anchor = { date: dates[0], row: n };
+      saveManual();
+    }
+    updateCopyPreview(el, dates);
+  });
+  const cb = el.querySelector(".inc-wk input");
+  if (cb) {
+    cb.addEventListener("change", () => {
+      state.includeWeekend = cb.checked;
+      renderCopyPanel(containerId, date, stateKey);
+    });
+  }
+  el.querySelector(".copy-btn").addEventListener("click", () => copySheetRows(el, dates));
+  updateCopyPreview(el, dates);
+}
+
+// "오늘 기준 금리"는 가장 최근 레코드, "날짜별 조회"는 조회창에 입력된 날짜를 대상으로 팝업을 연다.
+function openCopyModal(kind) {
+  let date;
+  if (kind === "today") {
+    const last = latestDay();
+    date = last ? last.date : null;
+  } else {
+    date = document.getElementById("lookupDate").value;
+  }
+  if (!date || !HISTORY.days[date]) {
+    alert(kind === "today" ? "아직 수집된 데이터가 없습니다." : "해당 날짜의 데이터가 없습니다. 날짜를 확인해주세요.");
+    return;
+  }
+  document.getElementById("copyModalDate").textContent = "(" + date + ")";
+  renderCopyPanel("copyModalBody", date, kind);
+  document.getElementById("copyModal").hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closeCopyModal() {
+  document.getElementById("copyModal").hidden = true;
+  document.getElementById("copyModalBody").innerHTML = "";
+  document.body.style.overflow = "";
+}
+
+document.getElementById("copyModal").addEventListener("click", (e) => {
+  if (e.target.id === "copyModal") closeCopyModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && !document.getElementById("copyModal").hidden) closeCopyModal();
+});
 
 const REFRESH_URL = "https://github.com/hanwha31020-bot/ratehisc/actions/workflows/fetch-rates.yml";
 const REFRESH_PASSWORD = "31020";
