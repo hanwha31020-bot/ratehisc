@@ -84,7 +84,7 @@
   .raw-value { font-size: 10px; color: var(--text-muted); border-top: 1px dashed var(--border); margin-top: 4px; padding-top: 3px; }
   .rate-tile .eff { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
   .rate-tile.status-blocked .value, .rate-tile.status-no_data .value { color: var(--bad); font-size: 15px; }
-  .rate-tile.status-pending .value { color: var(--text-muted); font-size: 15px; }
+  .rate-tile.status-pending .value, .rate-tile.status-uncollected .value { color: var(--text-muted); font-size: 15px; }
   td .value-row { font-size: 13px; }
   td .raw-value { margin-top: 2px; padding-top: 2px; }
   .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
@@ -346,11 +346,12 @@ const METRIC_LABELS = {
   corp_aa_1y: "회사채(AA-,1년)",
   corp_aa_2y: "회사채(AA-,2년)",
   corp_aa_3y: "회사채(AA-,3년)",
+  call_rate: "콜금리(시작금리+10bp)",
   treasury_3y: "국고채권(3년)",
   sofr: "SOFR",
 };
-const STATUS_LABEL = { ok: "정상", blocked: "수집실패", no_data: "데이터없음", pending: "발표 전" };
-const STATUS_CLASS = { ok: "ok", blocked: "bad", no_data: "warn", pending: "warn" };
+const STATUS_LABEL = { ok: "정상", blocked: "수집실패", no_data: "데이터없음", pending: "발표 전", uncollected: "수집 전" };
+const STATUS_CLASS = { ok: "ok", blocked: "bad", no_data: "warn", pending: "warn", uncollected: "warn" };
 
 let HISTORY = { metrics: Object.keys(METRIC_LABELS), days: {} };
 
@@ -749,6 +750,26 @@ function callKeyFor(date) {
   const rec = HISTORY.days[date] || {};
   const eff = rec.effective_date || {};
   return eff.cd91 || date;
+}
+
+// 콜금리(콜시작금리+10bp)를 다른 금리처럼 조회 화면(타일·날짜별·기간별·CSV)에 보이도록, 자동 수집값으로
+// 각 날짜 레코드에 call_rate 항목을 만들어 넣고 회사채(AA-,3년) 다음 순서로 둔다.
+// 자동값이 아직 없는 날은 "수집 전"(uncollected)으로 표시한다. 팝업에서 직접 고친 값은 여기에 반영하지 않는다.
+function addCallRateMetric() {
+  if (!HISTORY.metrics.includes("call_rate")) {
+    const i = HISTORY.metrics.indexOf("corp_aa_3y");
+    HISTORY.metrics.splice(i >= 0 ? i + 1 : HISTORY.metrics.length, 0, "call_rate");
+  }
+  for (const [date, rec] of Object.entries(HISTORY.days)) {
+    const key = callKeyFor(date);
+    const auto = CALL_START[key];
+    rec.values = rec.values || {};
+    rec.status = rec.status || {};
+    rec.effective_date = rec.effective_date || {};
+    rec.values.call_rate = auto ? addDec(auto.value, SHEET_RULES.callAdd) : null;
+    rec.status.call_rate = auto ? "ok" : "uncollected";
+    rec.effective_date.call_rate = auto ? key : null;
+  }
 }
 
 // 직접 넣은 값이 있으면 그 값, 없으면 자동 수집값, 둘 다 없으면 null (수집 전).
@@ -1151,6 +1172,7 @@ async function init() {
   } catch (e) {
     // 콜시작금리 자동값이 없어도 복사는 되고, 그 칸만 직접 입력하게 된다
   }
+  addCallRateMetric();
 
   const metricPicker = document.getElementById("metricPicker");
   HISTORY.metrics.forEach((m) => {

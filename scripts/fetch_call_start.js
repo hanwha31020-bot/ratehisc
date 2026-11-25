@@ -10,7 +10,8 @@
  *
  * 결과는 docs/data/call_start.json 에 {날짜: {value, repo_low, repo_high, base, seq}}로 저장한다.
  * 날짜는 PDF 안의 날짜가 아니라 게시 목록의 날짜를 쓴다 (PDF 본문 날짜에 오타가 있는 파일이 있다).
- * 이미 저장된 날짜는 다시 받지 않으므로 하루에 여러 번 실행돼도 무해하고, 변화가 없으면 파일을 쓰지 않는다.
+ * 이미 저장된 날짜는 다시 받지 않으므로(최근 REFRESH_COUNT일 제외, 교체된 PDF를 반영하기 위해 다시 확인)
+ * 하루에 여러 번 실행돼도 무해하고, 변화가 없으면 파일을 쓰지 않는다.
  * 휴일(PDF가 없는 평일)과 주말은 이 파일에 없는 날짜이며, 화면에서 국내 금리의 기준일(CD 기준일)로
  * 조회하므로 직전 영업일 값이 그대로 쓰인다.
  *
@@ -26,6 +27,10 @@ const OUT_PATH = process.env.CALL_START_OUT || path.join(ROOT, "docs", "data", "
 const LIST_URL = "https://www.kmbco.com/kor/trendi/money_trend.do";
 const DOWNLOAD_URL = "https://www.kmbco.com/common/downloadFile.do";
 const MAX_PAGES = 30;
+// 최근 N일은 이미 저장돼 있어도 매번 다시 받아 값이 바뀌었는지 확인한다.
+// KMB는 전날 저녁(17:49~20:16)에 올린 PDF를 다음 날 아침(07:55~10:16)에 다시 만들어 교체하는 날이 있다
+// (2026-04~11 중 156일 가운데 9일). 같은 첨부 번호로 덮어써서 번호로는 알 수 없고 값을 비교해야 한다.
+const REFRESH_COUNT = 3;
 const HEADERS = {
   "User-Agent":
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -133,8 +138,11 @@ async function main() {
   const existing = loadExisting();
   const days = { ...existing.days };
   let added = 0;
+  let refreshed = 0;
   let failed = 0;
   let listOk = false;
+  let newest = [];
+  const fetchedNow = new Set();
 
   for (let page = 1; page <= MAX_PAGES; page++) {
     let entries;
@@ -146,6 +154,7 @@ async function main() {
       break;
     }
     if (entries.length === 0) break;
+    if (page === 1) newest = entries.slice(0, REFRESH_COUNT);
 
     let anyNew = false;
     for (const { date, seq } of entries) {
@@ -155,6 +164,7 @@ async function main() {
         const parsed = parseCallStart(await extractItems(await downloadPdf(seq)));
         if (!parsed) throw new Error("표에서 레포(일반채)/기준금리 값을 읽지 못했습니다");
         days[date] = { value: parsed.value, repo_low: parsed.repo_low, repo_high: parsed.repo_high, base: parsed.base, seq };
+        fetchedNow.add(date);
         added++;
         console.log(`${date} 콜시작금리 ${parsed.value.toFixed(2)} (레포 ${parsed.repo_low}~${parsed.repo_high}, 기준금리 ${parsed.base})`);
       } catch (e) {
@@ -172,6 +182,22 @@ async function main() {
     return;
   }
 
+  for (const { date, seq } of newest) {
+    if (!days[date] || fetchedNow.has(date)) continue;
+    try {
+      const parsed = parseCallStart(await extractItems(await downloadPdf(seq)));
+      if (!parsed) throw new Error("표에서 레포(일반채)/기준금리 값을 읽지 못했습니다");
+      const next = { value: parsed.value, repo_low: parsed.repo_low, repo_high: parsed.repo_high, base: parsed.base, seq };
+      if (JSON.stringify(next) !== JSON.stringify(days[date])) {
+        console.log(`::notice::${date} 콜시작금리 갱신: ${days[date].value.toFixed(2)} -> ${next.value.toFixed(2)} (PDF가 교체됨)`);
+        days[date] = next;
+        refreshed++;
+      }
+    } catch (e) {
+      console.log(`::warning::${date} 재확인 실패, 기존 값을 유지합니다: ${e.message}`);
+    }
+  }
+
   const sorted = Object.fromEntries(Object.keys(days).sort().map((d) => [d, days[d]]));
   const text = JSON.stringify({ source: "한국자금중개(KMB) 일일 원화자금 현황 PDF", days: sorted }, null, 2) + "\n";
   let before = "";
@@ -182,7 +208,7 @@ async function main() {
     fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
     fs.writeFileSync(OUT_PATH, text);
   }
-  console.log(`완료: 신규 ${added}건, 실패 ${failed}건, 총 ${Object.keys(sorted).length}일`);
+  console.log(`완료: 신규 ${added}건, 갱신 ${refreshed}건, 실패 ${failed}건, 총 ${Object.keys(sorted).length}일`);
 }
 
 if (require.main === module) {
