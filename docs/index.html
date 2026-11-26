@@ -747,7 +747,7 @@ const copyPanelState = {};
 // 바뀌지 않도록 열마다 같은 서식을 HTML에 싣는다. 값은 시트 최근 60행의 열별 서식을 그대로 옮긴 것이다.
 const CELL_BORDER = { hair: ".5pt hairline windowtext", thin: ".5pt solid windowtext" };
 const SHEET_CELL_STYLES = [
-  { fmt: '"Short Date"', align: null, br: "thin", fill: "#CAEEFB" }, // A 날짜
+  { fmt: '"Short Date"', align: null, br: "thin", fill: "#FFF2CC" }, // A 날짜
   { fmt: "General", align: "center", bl: "hair", br: "hair" }, // B 요일
   { fmt: '"0.00"', align: "center", bl: "hair", br: "hair" }, // C 100
   { fmt: '"0.00"', align: "center", br: "hair" }, // D 101
@@ -1018,13 +1018,25 @@ function escHtml(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/'/g, "&#39;");
 }
 
-function sheetCellCss(i, red) {
+// 시트의 조건부 서식을 흉내 낸 배경색. 서식을 포함해 붙여넣으면 엑셀이 붙여넣은 칸의 조건부 서식을 지워 버려서
+// 같은 규칙의 색을 고정 서식으로 싣는다 (값이 나중에 바뀌어도 색은 따라 바뀌지 않는다).
+//  - 요일(B)이 토·일: 빨간 배경 / 118·119(Q·R)는 요일이 토·일·월: 노란 배경 / 변동내역(S~AH)이 "변동없음": 회색 배경
+// plainCells: 같은 행을 값으로 만든 셀 목록 (수식 칸의 계산값을 알아야 하므로)
+function condFill(ci, plainCells) {
+  const dow = plainCells[1];
+  if (ci === 1 && (dow === "토" || dow === "일")) return "#FF0000";
+  if ((ci === 16 || ci === 17) && (dow === "토" || dow === "일" || dow === "월")) return "#FFFF00";
+  if (ci >= 18 && ci <= 33 && plainCells[ci] === "변동없음") return "#A6A6A6";
+  return null;
+}
+
+function sheetCellCss(i, red, fill) {
   const s = SHEET_CELL_STYLES[i];
   let css = `font-family:맑은 고딕;font-size:11pt;vertical-align:middle;mso-number-format:${s.fmt};`;
   if (s.align) css += `text-align:${s.align};`;
   if (s.bl) css += `border-left:${CELL_BORDER[s.bl]};`;
   if (s.br) css += `border-right:${CELL_BORDER[s.br]};`;
-  if (s.fill) css += `background:${s.fill};mso-pattern:auto none;`;
+  if (fill || s.fill) css += `background:${fill || s.fill};mso-pattern:auto none;`;
   css += `color:${red ? "#FF0000" : "windowtext"};`;
   return css;
 }
@@ -1033,12 +1045,12 @@ function sheetCellCss(i, red) {
 // 엑셀 전용 x:fmla 속성이나 엑셀 네임스페이스(xmlns:x)를 쓰면 안 된다: 엑셀이 그 수식을 "1행에서 복사해 온
 // 수식"으로 보고 붙여넣는 행만큼 참조를 통째로 밀어버린다 (1416행에 붙이면 =C1416+$D$2 가
 // =C2831+$D$1417 로 바뀜). 일반 웹 표로 싣고 엑셀이 글자를 직접 입력한 것처럼 해석하게 한다.
-function buildSheetHtml(built, flags) {
+function buildSheetHtml(built, flags, plain) {
   const rowsHtml = built
     .map(
       (b, ri) =>
         `<tr>${b.cells
-          .map((c, ci) => `<td style='${sheetCellCss(ci, flags[ri][ci] && c !== "")}'>${escHtml(c)}</td>`)
+          .map((c, ci) => `<td style='${sheetCellCss(ci, flags[ri][ci] && c !== "", condFill(ci, plain[ri].cells))}'>${escHtml(c)}</td>`)
           .join("")}</tr>`
     )
     .join("");
@@ -1145,7 +1157,8 @@ function updateCopyPreview(el, dates) {
             const noCall = ci === CALL_COL && shown === ""; // 콜시작금리 자동값이 아직 없으면 직접 입력
             const cls = noCall ? "manual" : shown === "" ? "blank" : red && flags[ri][ci] ? "chg" : "";
             const inner = noCall ? "직접 입력" : isFormula ? `${shown}<div class="f">${c}</div>` : c;
-            return `<td class="${cls}">${inner}</td>`;
+            const fill = red && cls === "" ? condFill(ci, plain[ri].cells) : null; // 서식 포함 복사일 때 붙는 조건부 서식 색
+            return `<td class="${cls}"${fill ? ` style="background:${fill}"` : ""}>${inner}</td>`;
           })
           .join("")}</tr>`
     )
@@ -1169,7 +1182,8 @@ async function copySheetRows(el, dates) {
   const rich = redOptionOn(el);
   const flags = dates.map((d) => changedFlags(d, manual));
   const redCount = flags.reduce((n, f, ri) => n + f.filter((x, ci) => x && built[ri].cells[ci] !== "").length, 0);
-  const result = rich ? await copyRich(text, buildSheetHtml(built, flags)) : (await copyToClipboard(text)) ? "plain" : false;
+  const plain = dates.map((d) => buildSheetRow(d, manual, undefined));
+  const result = rich ? await copyRich(text, buildSheetHtml(built, flags, plain)) : (await copyToClipboard(text)) ? "plain" : false;
   const msg = el.querySelector(".copy-msg");
   if (!result) {
     msg.className = "copy-msg warn";
